@@ -1,6 +1,4 @@
 function [ CapacityChain ] = CapacityPunishment(index,vehicle_chain,demand,vhccapacity)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
 TsPoints=vehicle_chain(vehicle_chain>2*demand);
 CapacityChain=zeros(1,size(vehicle_chain,2));
 if isempty(TsPoints)

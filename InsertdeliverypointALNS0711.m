@@ -1,8 +1,4 @@
 function [YON,solution] = InsertdeliverypointALNS0711(AwithFF,TS_point,TsAfterThis,BTsToA,ATsToB,demand,DemandF,epos,index,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop)
-%%%%%%%%%%%%%上车点满足时间窗插入满足条件的下车点
-%%%%%%%%%%%%%这里输入的solutiona是带其他下车点，只不带刚刚交换的pickpoint的下车点的
-%%%%%%%%%%%%%TS position是与solutiona的情况匹配的
-%%%%%%%%%%%%%先插TS点，然后插其他下车需求点，不用管上车需求点
 YN=0;
 yn=1;
 M = size(AwithFF,2);
@@ -16,12 +12,6 @@ AFFxATsToB=AwithFFTS;
 for i=1:size(ATsToB,2)
     AFFxATsToB=AwithFFTS(AwithFFTS~=ATsToBdelivery(i));
 end
-% % TsFOrNot=find(ATsToB==DemandF);
-% % if isempty(TsFOrNot)
-% %     DemandsAneedToDeliver=[BTsToA,DemandF];
-% % else
-% %     DemandsAneedToDeliver=BTsToA;
-% % end
 if size(BTsToA,2)==0
     solution=AFFxATsToB;
     YN=1;

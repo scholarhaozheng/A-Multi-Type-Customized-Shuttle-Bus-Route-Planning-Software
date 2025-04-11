@@ -1,6 +1,4 @@
 function [ YN ] = CapacityCheck(index,vehicle_chain,demand,vhccapacity)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
 if size(vehicle_chain,2)==0
     YN=1;
 else

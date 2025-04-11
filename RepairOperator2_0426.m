@@ -39,9 +39,6 @@ for m=1:DeteleNumB
             elseif InsertPositionA==size(A_middle,2)+1
                 AwithoutEEwithF=[A_middle(1,1:end),DemandF];
             end
-% %             j
-% %             A_middle
-% %             DemandF
             YNA1 = judgement_op(AwithoutEEwithF,a,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,demand,op,tsop);
             [ YNtime1 ] = CalculatingTotalTime(a,AwithFF,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk,TravelTimeMax);
             if YNA1==0||YNtime1==0

@@ -1,6 +1,6 @@
 function [ DeteleNumA,DeteleNumB,DemandEList,DemandFList ] = DestroyOperator2( r,a,b,solutionNoTsa,solutionNoTsb,demand,NoTsSolutioncell,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot )
-SZA = size(solutionNoTsa,2);%%%车辆链A中有几个点？
-SZB = size(solutionNoTsb,2);%%%车辆链B中有几个点？
+SZA = size(solutionNoTsa,2);
+SZB = size(solutionNoTsb,2);
 DeteleNumA=ceil(SZA*r);
 DeteleNumB=ceil(SZB*r);
 eList=zeros(1,DeteleNumA);

@@ -1,13 +1,8 @@
 function [TsRelationNewWithTS,TsRelationshipNoTs,tablesolutionneig, NoTsSolutioncell, BestAllSolutionTs,BestAllOverCostTs] = DestroyandRepair_swap_2opt_func0803_edit_rep_1(currentsolutioncell,CurrentNoTsSolutionCell,TsRelationship,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,des_option,rep_option,TravelTimeMax,op,tsop,SetTsMax,EachOptionMax,iteration,His_TsRelationship)
-%%%function [TsRelationNewWithTS,TsRelationshipNoTs,tablesolutionneig, NoTsSolutioncell, BestAllSolutionTs,BestAllOverCostTs] = performswapTS_zh_Im(currentsolutioncell,CurrentNoTsSolution,TsRelationship,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,des_option,rep_option)
-%%%%%输出的nsolutioncell和BestAllSolutionTs均带下车点和TS点
 M = size(currentsolutioncell,1);
 demandtime=[demandstarttime;demandendtime];
 YN = 0;
 r=0.1;
-% % TsRelationship=[
-% %     iteration,jthneighbor,a];
-%%%%%在加入需要的约束之前的权宜之计
 if rep_option==3
     rep_option=2;
 end
@@ -18,10 +13,10 @@ while YN == 0
         a = randi(M);
         b = randi(M);
         NoTsSolutioncell=currentsolutioncell;
-        solutionOria = currentsolutioncell{a,1};%%%%%%车辆链A
-        solutionOrib = currentsolutioncell{b,1};%%%%%%车辆链B
+        solutionOria = currentsolutioncell{a,1};
+        solutionOrib = currentsolutioncell{b,1};
         rt = (isempty(solutionOria))||(isempty(solutionOrib));
-        while (a == b)||(rt == 1)       %保证非空且不等
+        while (a == b)||(rt == 1)       
             a = randi(M);
             b = randi(M);
             solutionOria = currentsolutioncell{a,1};
@@ -36,7 +31,7 @@ while YN == 0
         YNaa=1;
         YNb=1;
         YNbb=1;
-        if TsRelationship(a,1)~=0%%%两列车辆数行
+        if TsRelationship(a,1)~=0
             PointTsWithA=TsRelationship(a,1);
             display([ num2str(a) ' and ' num2str(PointTsWithA) ' are related' ]);
             solutionaReinsert=solutionOria;
@@ -54,7 +49,7 @@ while YN == 0
             TsRelationshipNoTs(a,2)=0;
             TsRelationshipNoTs(PointTsWithA,2)=0;
         end
-        if TsRelationship(b,1)~=0%%%两列车辆数行
+        if TsRelationship(b,1)~=0
             PointTsWithB=TsRelationship(b,1);
             display([ num2str(b) ' and ' num2str(PointTsWithB) ' are related' ]);
             solutionbReinsert=solutionOrib;
@@ -79,8 +74,8 @@ while YN == 0
         end
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    SZA = size(solutionNoTsa,2);%%%车辆链A中有几个点？
-    SZB = size(solutionNoTsb,2);%%%车辆链B中有几个点？
+    SZA = size(solutionNoTsa,2);
+    SZB = size(solutionNoTsb,2);
     YN=0;
     TooMuchOrNot=0;
     CountNum=0;
@@ -104,7 +99,6 @@ while YN == 0
             [ DeteleNumA,DemandEList ] = DestroyOperator5( a,solutionNoTsa,NoTsSolutioncell,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot );
             [ DeteleNumB,DemandFList ] = DestroyOperator5( b,solutionNoTsb,NoTsSolutioncell,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot );
         end
-        display('I am at 107!!!!!!!!!!!!!!!!!!!!!!!!!');
         AwithoutEE=solutionNoTsa;
         BwithoutFF=solutionNoTsb;
         for j=1:DeteleNumA
@@ -160,8 +154,6 @@ while YN == 0
         end
     end
 end
-display('I am at 162!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-%%%%%%%%%%%%%%%%%%%%%%%%TS部分
 display(['Transfering, Chain' num2str(a) ' and Chain' num2str(b) ' are being proceeded']);
 [SetTs] = TransitOrNotAndWhere0421(AwithFF,BwithEE,vhcdepot,a,b,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,op,tsop);
 if isempty(SetTs)

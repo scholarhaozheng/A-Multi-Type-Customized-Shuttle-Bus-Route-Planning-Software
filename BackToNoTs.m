@@ -1,6 +1,4 @@
 function [YN,solutionaReinsertOut] = BackToNoTs(index,currentsolutioncell,CurrentNoTsSolutionCell,TsRelationship,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,des_option,rep_option,TravelTimeMax,op,tsop,SetTsMax,EachOptionMax,iteration,solutionaReinsert)
-%UNTITLED4 此处显示有关此函数的摘要
-%   此处显示详细说明
 YN=0;
 yn=0;
 aInsertList=solutionaReinsert;
