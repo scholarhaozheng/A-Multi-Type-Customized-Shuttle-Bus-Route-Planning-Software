@@ -2,69 +2,132 @@ tic
 clear all;
 clc;
 
-TravelTimeMax=500;
-maxiteration = 100;%---------------停止规则为到达一定迭代步数即停止
-vhcnum = 30;%车辆数量
-demand = 10;%需求数量
-neignum = 10;%邻居数量
-tabulength = 30;%可以变化长度，但要放在大循环里------------------------------------------------禁忌长度
-alpha1=33;
-alpha2=9;
-alpha3=13;
-r=0.1;
-tsNum=1;
-depotNum=1;
-TS=[2*demand+1];
-op=2;
-tsop=3;
-SetTsMax=16;
-EachOptionMax=8;
-lambda=20;
-demandv=demand+1;
-demandstarttime = xlsread('.\gams10.xlsx',1,['F2:G' num2str(demandv)]);
-demandendtime = xlsread('.\gams10.xlsx',1,['H2:I' num2str(demandv)]);
-demandstartlocation = xlsread('.\gams10.xlsx',1,['B2:C' num2str(demandv)]);
-demandendlocation = xlsread('.\gams10.xlsx',1,['D2:E' num2str(demandv)]);
-tsv1=demandv+1;
-tsv2=tsv1+tsNum-1;
-depv1=tsv2+1;
-depv2=depv1+depotNum-1;
-tsLocation=xlsread('.\gams10.xlsx',1,['B' num2str(tsv1) ':C' num2str(tsv2)]);
-depLocation=xlsread('.\gams10.xlsx',1,['B' num2str(depv1) ':C' num2str(depv2)]);
-demandlocation=[demandstartlocation;demandendlocation];
-allLocation=[demandlocation;tsLocation;depLocation];
-demandtime=[demandstarttime;demandendtime];
-distancematrix = generatedismatrix1(allLocation,allLocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
-timematrix = distancematrix*2;%速度0.5km/min,单位min
-% vhclocation = zeros(vhcnum,1); %车辆位置
-% vhctype = zeros(vhcnum,1);    %车辆类型
-% vhccapacity = zeros(vhcnum,1); %车辆额定载客量
-% vhcdepot = zeros(vhcnum,1);  %车辆所属场站
-indexv=vhcnum+1;
-vhcdepot = xlsread('.\vechleinfomation0731gams.xlsx',1,['O2:O' num2str(indexv)]);%车辆-路网编号 O2:O16为车辆的起始场站编号
-for i=1:vhcnum
-    vhclocation(i,1) = allLocation(vhcdepot(i,1),1);
-    vhclocation(i,2) = allLocation(vhcdepot(i,1),2);
-end
-vhctype = xlsread('.\vechleinfomation0731gams.xlsx',1,['C2:C' num2str(indexv)]);
-vhccapacity = xlsread('.\vechleinfomation0731gams.xlsx',1,['D2:D' num2str(indexv)]);
-vhcstarttime = xlsread('.\vechleinfomation0731gams.xlsx',1,['F2:G' num2str(indexv)]);
-vhcendtime = xlsread('.\vechleinfomation0731gams.xlsx',1,['H2:I' num2str(indexv)]);
-fixedcost = xlsread('.\vechleinfomation0731gams.xlsx',1,['J2:J' num2str(indexv)]);%车辆固定成本
-% ck = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0731gamsairport.xlsx','K2:K21');%车辆运行单位长度成本
-cwk = xlsread('.\vechleinfomation0731gams.xlsx',1,['L2:L' num2str(indexv)]);%车辆等待单位时间成本
-ctk = xlsread('.\vechleinfomation0731gams.xlsx',1,['M2:M' num2str(indexv)]);%车辆运行单位时间成本
-depotendtime=[demand*2+tsNum+1,780;];
-% L0 = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0731gamsairport.xlsx','N2:N21');%固定成本所能运行的距离
-
-%计算场站-需求timematrix矩阵
-% vhcdemanddistancematrix = generatedismatrix1(vhclocation,demandlocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
-% vhcdemandtimematrix = vhcdemanddistancematrix*0.2;%速度30km/h,单位min
-vhcdemandtimematrix = calvhcdemandtimematrix(vhcnum,demand,tsNum,depotNum,timematrix,vhcdepot);
-[inisolution1,inireject1] = GenerateinisolutionRight0410(demand,demandstarttime,demandendtime,vhclocation,vhcstarttime,vhcendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);%------------函数：初始解生成（节约法）
-[inicost1,~] = calculatetotalcost_test(inisolution1,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);%-------------------函数：对解进行计算目标值
-
-%%save initial0802_not_concentrate.mat
+% % % TravelTimeMax=500;
+% % % maxiteration = 1;%---------------停止规则为到达一定迭代步数即停止
+% % % vhcnum = 170;%车辆数量
+% % % demand = 476;%需求数量
+% % % neignum = 10;%邻居数量
+% % % tabulength = 30;%可以变化长度，但要放在大循环里------------------------------------------------禁忌长度
+% % % alpha1=33;
+% % % alpha2=9;
+% % % alpha3=13;
+% % % r=0.1;
+% % % tsNum=3;
+% % % depotNum=5;
+% % % TS=[2*demand+1,2*demand+2,2*demand+3];
+% % % op=2;
+% % % tsop=3;
+% % % SetTsMax=16;
+% % % EachOptionMax=8;
+% % % lambda=20;
+% % % demandv=demand+1;
+% % % demandstarttime = xlsread('.\result0731_right.xlsx',1,['F2:G' num2str(demandv)]);
+% % % demandendtime = xlsread('.\result0731_right.xlsx',1,['H2:I' num2str(demandv)]);
+% % % demandstartlocation = xlsread('.\result0731_right.xlsx',1,['B2:C' num2str(demandv)]);
+% % % demandendlocation = xlsread('.\result0731_right.xlsx',1,['D2:E' num2str(demandv)]);
+% % % tsv1=demandv+1;
+% % % tsv2=tsv1+tsNum-1;
+% % % depv1=tsv2+1;
+% % % depv2=depv1+depotNum-1;
+% % % tsLocation=xlsread('.\result0731_right.xlsx',1,['B' num2str(tsv1) ':C' num2str(tsv2)]);
+% % % depLocation=xlsread('.\result0731_right.xlsx',1,['B' num2str(depv1) ':C' num2str(depv2)]);
+% % % demandlocation=[demandstartlocation;demandendlocation];
+% % % allLocation=[demandlocation;tsLocation;depLocation];
+% % % demandtime=[demandstarttime;demandendtime];
+% % % distancematrix = generatedismatrix1(allLocation,allLocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
+% % % timematrix = distancematrix*2;%速度0.5km/min,单位min
+% % % % vhclocation = zeros(vhcnum,1); %车辆位置
+% % % % vhctype = zeros(vhcnum,1);    %车辆类型
+% % % % vhccapacity = zeros(vhcnum,1); %车辆额定载客量
+% % % % vhcdepot = zeros(vhcnum,1);  %车辆所属场站
+% % % indexv=vhcnum+1;
+% % % vhcdepot = xlsread('.\vechleinfomation0730_1000.xlsx',1,['O2:O' num2str(indexv)]);%车辆-路网编号 O2:O16为车辆的起始场站编号
+% % % for i=1:vhcnum
+% % %     vhclocation(i,1) = allLocation(vhcdepot(i,1),1);
+% % %     vhclocation(i,2) = allLocation(vhcdepot(i,1),2);
+% % % end
+% % % vhctype = xlsread('.\vechleinfomation0730_1000.xlsx',1,['C2:C' num2str(indexv)]);
+% % % vhccapacity = xlsread('.\vechleinfomation0730_1000.xlsx',1,['D2:D' num2str(indexv)]);
+% % % vhcstarttime = xlsread('.\vechleinfomation0730_1000.xlsx',1,['F2:G' num2str(indexv)]);
+% % % vhcendtime = xlsread('.\vechleinfomation0730_1000.xlsx',1,['H2:I' num2str(indexv)]);
+% % % fixedcost = xlsread('.\vechleinfomation0730_1000.xlsx',1,['J2:J' num2str(indexv)]);%车辆固定成本
+% % % % ck = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0730_1000airport.xlsx','K2:K21');%车辆运行单位长度成本
+% % % cwk = xlsread('.\vechleinfomation0730_1000.xlsx',1,['L2:L' num2str(indexv)]);%车辆等待单位时间成本
+% % % ctk = xlsread('.\vechleinfomation0730_1000.xlsx',1,['M2:M' num2str(indexv)]);%车辆运行单位时间成本
+% % % depotendtime=[demand*2+tsNum+1,780;demand*2+tsNum+2,780;demand*2+tsNum+3,780;demand*2+tsNum+4,780;demand*2+tsNum+5,780;];
+% % % % L0 = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0730_1000airport.xlsx','N2:N21');%固定成本所能运行的距离
+% % % 
+% % % %计算场站-需求timematrix矩阵
+% % % % vhcdemanddistancematrix = generatedismatrix1(vhclocation,demandlocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
+% % % % vhcdemandtimematrix = vhcdemanddistancematrix*0.2;%速度30km/h,单位min
+% % % vhcdemandtimematrix = calvhcdemandtimematrix(vhcnum,demand,tsNum,depotNum,timematrix,vhcdepot);
+% % % [inisolution1,inireject1] = GenerateinisolutionRight0410(demand,demandstarttime,demandendtime,vhclocation,vhcstarttime,vhcendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);%------------函数：初始解生成（节约法）
+% % % [inicost1,~] = calculatetotalcost_test(inisolution1,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);%-------------------函数：对解进行计算目标值
+% % % 
+% % % TravelTimeMax=500;
+% % % maxiteration = 1;%---------------停止规则为到达一定迭代步数即停止
+% % % vhcnum = 170;%车辆数量
+% % % demand = 1000;%需求数量
+% % % neignum = 10;%邻居数量
+% % % tabulength = 30;%可以变化长度，但要放在大循环里------------------------------------------------禁忌长度
+% % % alpha1=33;
+% % % alpha2=9;
+% % % alpha3=13;
+% % % r=0.1;
+% % % tsNum=3;
+% % % depotNum=5;
+% % % TS=[2*demand+1,2*demand+2,2*demand+3];
+% % % op=2;
+% % % tsop=3;
+% % % SetTsMax=16;
+% % % EachOptionMax=8;
+% % % lambda=20;
+% % % demandv=demand+1;
+% % % demandstarttime = xlsread('.\result0731_right.xlsx',1,['F2:G' num2str(demandv)]);
+% % % demandendtime = xlsread('.\result0731_right.xlsx',1,['H2:I' num2str(demandv)]);
+% % % demandstartlocation = xlsread('.\result0731_right.xlsx',1,['B2:C' num2str(demandv)]);
+% % % demandendlocation = xlsread('.\result0731_right.xlsx',1,['D2:E' num2str(demandv)]);
+% % % tsv1=demandv+1;
+% % % tsv2=tsv1+tsNum-1;
+% % % depv1=tsv2+1;
+% % % depv2=depv1+depotNum-1;
+% % % tsLocation=xlsread('.\result0731_right.xlsx',1,['B' num2str(tsv1) ':C' num2str(tsv2)]);
+% % % depLocation=xlsread('.\result0731_right.xlsx',1,['B' num2str(depv1) ':C' num2str(depv2)]);
+% % % demandlocation=[demandstartlocation;demandendlocation];
+% % % allLocation=[demandlocation;tsLocation;depLocation];
+% % % demandtime=[demandstarttime;demandendtime];
+% % % distancematrix = generatedismatrix1(allLocation,allLocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
+% % % timematrix = distancematrix*2;%速度0.5km/min,单位min
+% % % % vhclocation = zeros(vhcnum,1); %车辆位置
+% % % % vhctype = zeros(vhcnum,1);    %车辆类型
+% % % % vhccapacity = zeros(vhcnum,1); %车辆额定载客量
+% % % % vhcdepot = zeros(vhcnum,1);  %车辆所属场站
+% % % indexv=vhcnum+1;
+% % % vhcdepot = xlsread('.\vechleinfomation0730_1000.xlsx',1,['O2:O' num2str(indexv)]);%车辆-路网编号 O2:O16为车辆的起始场站编号
+% % % for i=1:vhcnum
+% % %     vhclocation(i,1) = allLocation(vhcdepot(i,1),1);
+% % %     vhclocation(i,2) = allLocation(vhcdepot(i,1),2);
+% % % end
+% % % vhctype = xlsread('.\vechleinfomation0730_1000.xlsx',1,['C2:C' num2str(indexv)]);
+% % % vhccapacity = xlsread('.\vechleinfomation0730_1000.xlsx',1,['D2:D' num2str(indexv)]);
+% % % vhcstarttime = xlsread('.\vechleinfomation0730_1000.xlsx',1,['F2:G' num2str(indexv)]);
+% % % vhcendtime = xlsread('.\vechleinfomation0730_1000.xlsx',1,['H2:I' num2str(indexv)]);
+% % % fixedcost = xlsread('.\vechleinfomation0730_1000.xlsx',1,['J2:J' num2str(indexv)]);%车辆固定成本
+% % % % ck = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0730_1000airport.xlsx','K2:K21');%车辆运行单位长度成本
+% % % cwk = xlsread('.\vechleinfomation0730_1000.xlsx',1,['L2:L' num2str(indexv)]);%车辆等待单位时间成本
+% % % ctk = xlsread('.\vechleinfomation0730_1000.xlsx',1,['M2:M' num2str(indexv)]);%车辆运行单位时间成本
+% % % depotendtime=[demand*2+tsNum+1,780;demand*2+tsNum+2,780;demand*2+tsNum+3,780;demand*2+tsNum+4,780;demand*2+tsNum+5,780;];
+% % % % L0 = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0730_1000airport.xlsx','N2:N21');%固定成本所能运行的距离
+% % % 
+% % % %计算场站-需求timematrix矩阵
+% % % % vhcdemanddistancematrix = generatedismatrix1(vhclocation,demandlocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
+% % % % vhcdemandtimematrix = vhcdemanddistancematrix*0.2;%速度30km/h,单位min
+% % % vhcdemandtimematrix = calvhcdemandtimematrix(vhcnum,demand,tsNum,depotNum,timematrix,vhcdepot);
+% % % [inisolution1,inireject1] = GenerateinisolutionRight0410(demand,demandstarttime,demandendtime,vhclocation,vhcstarttime,vhcendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);%------------函数：初始解生成（节约法）
+% % % [inicost1,~] = calculatetotalcost_test(inisolution1,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);%-------------------函数：对解进行计算目标值
+% % % 
+% % % 
+load initial0805_concentrate
 tabulist = ones(tabulength,7);
 
 His_TsRelationship=cell(maxiteration,1);
@@ -92,10 +155,8 @@ TsRelationship=zeros(vhcnum,2);
 %%objective = zeros(maxiteration,11);
 omega_des=0.2*ones(1,5);
 omega_rep=0.333333333*ones(1,3);
-omega_des_add=zeros(1,5);
-omega_rep_add=zeros(1,3);
-omega_des_time=zeros(1,5);
-omega_rep_time=zeros(1,3);
+omega_des1=0.2*ones(1,5);
+omega_rep1=0.333333333*ones(1,3);
 Choose_history_des=zeros(maxiteration,neignum);
 Choose_history_rep=zeros(maxiteration,neignum);
 for i = 1:maxiteration
@@ -108,20 +169,17 @@ for i = 1:maxiteration
     TsOrNot=zeros(1,neignum);
     notscostneig=zeros(neignum,1);
     for j = 1:neignum %生成邻域解
+        lambda=10;
         if i/lambda-ceil(i/lambda)==0
             omega_des=0.2*ones(1,5);
             omega_rep=0.333333333*ones(1,3);
-            omega_des_add=zeros(1,5);
-            omega_rep_add=zeros(1,3);
-            omega_des_time=zeros(1,5);
-            omega_rep_time=zeros(1,3);
         end
+        omega_des1=omega_des;
+        omega_rep1=omega_rep;
         desORrep=1;
         [ des_option ] = GeneratingOperatorsChoice( i,lambda,desORrep,omega_des);
         desORrep=2;
-        [ rep_option ] = GeneratingOperatorsChoice( i,lambda,desORrep,omega_rep);
-        omega_des_time(1,des_option)=omega_des_time(1,des_option)+1;
-        omega_rep_time(1,rep_option)=omega_rep_time(1,rep_option)+1;
+        [ rep_option ] = GeneratingOperatorsChoice( i,lambda,desORrep,omega_rep );
         Choose_history_des(i,j)=des_option;
         Choose_history_rep(i,j)=rep_option;
         display(['——————————————————————————']);
@@ -181,12 +239,6 @@ for i = 1:maxiteration
     display(['……………………………………………………………………']);
     display(['Bestcosttabuneig: ' num2str(bestcosttabuneig) ', tabuindex: ' num2str(tabuindex)]);
     display(['Bestcostneig: ' num2str(bestcostneig) ', index: ' num2str(index) ', TsOrNot is ' num2str(TsOrNot(1,index))]);
-% %     load debug0423.mat
-% %     if TsOrNot(1,index)==1
-% %         display(['let me see whats wrong'])
-% %         save debug0423.mat
-% %         pause(100000)
-% %     end
     if bestcosttabuneig < bestcost %若最优禁忌解小于最优解，则解禁
         tabuuseful=1;
         bestcost = bestcosttabuneig;
@@ -198,8 +250,8 @@ for i = 1:maxiteration
         TabuAdd = [bestsolutiontabuneig(1,1) bestsolutiontabuneig(1,5:7) bestsolutiontabuneig(1,2:4)];
         tabulist = [tabulist(2:tabulength,1:7);TabuAdd];
         display(['bestcosttabuneig < bestcost, ' ]);
-        omega_des_add(1,des_option)=omega_des_add(1,des_option)+alpha1;
-        omega_rep_add(1,rep_option)=omega_rep_add(1,rep_option)+alpha1;
+        omega_des1(1,des_option)=omega_des1(1,des_option)+alpha1;
+        omega_rep1(1,rep_option)=omega_rep1(1,rep_option)+alpha1;
     else
         %bestcostneig为最优邻域解
         currentsolution = tabletransitsolution{index,:};
@@ -208,18 +260,18 @@ for i = 1:maxiteration
         TabuAdd = [bestsolutionneig(1,1) bestsolutionneig(1,5:7) bestsolutionneig(1,2:4)];
         tabulist = [tabulist(2:tabulength,1:7);TabuAdd];
         if currentcost<bestcostneig
-            omega_des_add(1,des_option)=omega_des_add(1,des_option)+alpha3;
-            omega_rep_add(1,rep_option)=omega_rep_add(1,rep_option)+alpha3;
+            omega_des1(1,des_option)=omega_des1(1,des_option)+alpha3;
+            omega_rep1(1,rep_option)=omega_rep1(1,rep_option)+alpha3;
         else
-            omega_des_add(1,des_option)=omega_des_add(1,des_option)+alpha2;
-            omega_rep_add(1,rep_option)=omega_rep_add(1,rep_option)+alpha2;
+            omega_des1(1,des_option)=omega_des1(1,des_option)+alpha2;
+            omega_rep1(1,rep_option)=omega_rep1(1,rep_option)+alpha2;
         end
         currentcost = bestcostneig;
         if bestcostneig < bestcost %%%%%若最优邻域解小于历史最优解
             bestcost = currentcost;
             bestsolution = currentsolution;
-            omega_des_add(1,des_option)=omega_des_add(1,des_option)+alpha1;
-            omega_rep_add(1,rep_option)=omega_rep_add(1,rep_option)+alpha1;
+            omega_des1(1,des_option)=omega_des1(1,des_option)+alpha1;
+            omega_rep1(1,rep_option)=omega_rep1(1,rep_option)+alpha1;
         end
     end
     CurrentNoTsSolutionCell{i,1}=CurrentNoTsSolution;
@@ -228,24 +280,8 @@ for i = 1:maxiteration
     His_solution{i,1}=currentsolution;
     His_no_ts_solution{i,1}=CurrentNoTsSolution;
     if i/lambda-ceil(i/lambda)==0
-        for jjjj=1:5
-            if omega_des_time(1,jjjj)==0
-                omega_des_add(1,jjjj)=0;
-                continue
-            end
-            omega_des_add(1,jjjj)=omega_des_add(1,jjjj)/omega_des_time(1,jjjj)*5;
-        end
-        for jjjj=1:3
-            if omega_rep_time(1,jjjj)==0
-                omega_rep_add(1,jjjj)=0;
-                continue
-            end
-            omega_rep_add(1,jjjj)=omega_rep_add(1,jjjj)/omega_rep_time(1,jjjj)*10/3;
-        end
-        omega_des=omega_des*(1-r)+omega_des_add*r;
-        omega_rep=omega_rep*(1-r)+omega_rep_add*r;
-        omega_des_time=zeros(1,5);
-        omega_rep_time=zeros(1,3);
+        omega_des=omega_des1;
+        omega_rep=omega_rep1;
     end
 end
 % objecrtive_change_tabulength(mm,1)=bestcost;
@@ -280,8 +316,3 @@ for i=1:vhcnum
         dlmwrite('test.csv',bestsolution{i,1},'delimiter',',','-append');
     end
 end
-
-%save %solution0802_not_concentrate_TS.mat 历时 3635.088934 秒。
-%save solution0802_not_concentrate_NOTS.mat
-save gams10.mat
-

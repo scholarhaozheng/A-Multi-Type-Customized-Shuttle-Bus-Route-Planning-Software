@@ -1,4 +1,4 @@
-function [YN,solutionaReinsertOut] = BackToNoTs0504(index,currentsolutioncell,CurrentNoTsSolutionCell,TsRelationship,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,des_option,rep_option,TravelTimeMax,op,tsop,SetTsMax,EachOptionMax,iteration,solutionaReinsert)
+function [YN,solutionaReinsertOut] = BackToNoTs(index,currentsolutioncell,CurrentNoTsSolutionCell,TsRelationship,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,des_option,rep_option,TravelTimeMax,op,tsop,SetTsMax,EachOptionMax,iteration,solutionaReinsert)
 %UNTITLED4 此处显示有关此函数的摘要
 %   此处显示详细说明
 YN=0;
@@ -55,12 +55,6 @@ for kk=1:size(aInsertListOptions,1)
         else
             YN=1;
             solutionaReinsert=a_insert;
-        end
-        if i==size(aInsertList,2)
-            [ YNcapacity ] = CapacityCheck(a,solutionaReinsert,demand,vhccapacity);
-            if YNcapacity==0
-                YN=0;
-            end
         end
     end
     if YN==1
