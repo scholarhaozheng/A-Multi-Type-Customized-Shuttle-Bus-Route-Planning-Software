@@ -3,16 +3,14 @@ demandtime=[demandstarttime;demandendtime];
 M = size(solution,2);
 TimeArriving=zeros(1,M);
 TimeLeaving=zeros(1,M);
-%%%% YN=1：车辆链符合约束
 YN = 1;
 if (M ~= 0)
-    Tbegin = vhcstarttime(vhcindex,1); %%时间窗上限发车
-    FstNode = solution(1,1);%%%%车辆链中的第一个节点
-    TravelTime = vhcdemandtimematrix(vhcindex,FstNode);%%%车辆从出发点a到d需要走多久
-    %%%%%%车辆链中第一个节点是否可以被服务
-    if Tbegin + TravelTime > demandstarttime(FstNode,2)%%%车辆链中第一个节点最晚到达时间
+    Tbegin = vhcstarttime(vhcindex,1);
+    FstNode = solution(1,1);
+    TravelTime = vhcdemandtimematrix(vhcindex,FstNode);
+    if Tbegin + TravelTime > demandstarttime(FstNode,2)
         YN = 0;
-    else%%%%当第一个节点可以被服务时
+    else
         if Tbegin + TravelTime>=demandstarttime(FstNode,1)
             TimeArriving(1,1)=Tbegin + TravelTime;
             TimeLeaving(1,1)=TimeArriving(1,1)+op;
@@ -46,13 +44,11 @@ if (M ~= 0)
                 TimeLeaving(1,i+1)=TimeArriving(1,i+1)+tsop;
             end
         end
-        %%%%%%完成所有点能否被服务的判断
         if YN==1
             if TimeArriving(1,M) + vhcdemandtimematrix(vhcindex,solution(1,M)) > vhcendtime(vhcindex,2)
                 YN=0;
             end
         end
-        %%%%%%完成是否满足车辆时间窗下限的判断
     end
 end
 for i=1:M

@@ -1,6 +1,4 @@
 function [ option ] = GeneratingOperatorsChoice( i,lambda,desORrep,omega )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
 sumup_operator=0;
 for k=1:size(omega,2)
     sumup_operator=sumup_operator+omega(k);
