@@ -17,9 +17,9 @@ phi=1;
 kappa=1;
 SelectedA=0;
 while SelectedA<DeteleNumA
-    e = randi([1 SZA],1);   
+    e = randi([1 SZA],1);
     DemandE=solutionNoTsa(1,e);
-    if DemandE > demand     
+    if DemandE > demand
         DemandE = DemandE-demand;
         [~,e]=find(solutionNoTsa==DemandE);
     end
@@ -33,7 +33,7 @@ while SelectedA<DeteleNumA
 end
 SelectedB=0;
 for j=1:DeteleNumB
-    Relateness=99999*ones(1,SZB);
+    Relateness=inf*ones(1,SZB);
     for ii=1:SZB
         if solutionNoTsb(1,ii)>demand
             continue
@@ -53,7 +53,7 @@ for j=1:DeteleNumB
             numf=numf+1;
             j=j+1;
         else
-            Relateness_use(1,index_f)=99999;
+            Relateness_use(1,index_f)=inf;
             continue
         end
     end

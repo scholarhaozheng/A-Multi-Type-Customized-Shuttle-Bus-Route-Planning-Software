@@ -1,8 +1,8 @@
 function [ DeteleNumA,DemandEList ] = DestroyOperator4( r,a,solutionNoTsa,demand,NoTsSolutioncell )
 SZA = size(solutionNoTsa,2);
-e = randi([1 SZA],1);   
+e = randi([1 SZA],1);
 DemandE=solutionNoTsa(1,e);
-if DemandE > demand    
+if DemandE > demand
     DemandE = DemandE-demand;
     [~,e]=find(solutionNoTsa==DemandE);
 end

@@ -9,9 +9,9 @@ DemandEList=zeros(1,DeteleNumA);
 DemandFList=zeros(1,DeteleNumB);
 SelectedA=0;
 while SelectedA<DeteleNumA
-    e = randi([1 SZA],1);   
+    e = randi([1 SZA],1);
     DemandE=solutionNoTsa(1,e);
-    if DemandE > demand     
+    if DemandE > demand
         DemandE = DemandE-demand;
         [~,e]=find(solutionNoTsa==DemandE);
     end
@@ -25,9 +25,9 @@ while SelectedA<DeteleNumA
 end
 SelectedB=0;
 while SelectedB<DeteleNumB
-    f = randi([1 SZB],1);   
+    f = randi([1 SZB],1);
     DemandF=solutionNoTsb(1,f);
-    if DemandF > demand    
+    if DemandF > demand
         DemandF = DemandF-demand;
         [~,f]=find(solutionNoTsb==DemandF);
     end

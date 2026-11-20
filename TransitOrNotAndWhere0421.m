@@ -5,7 +5,7 @@ depotB=vhcdepot(b,1);
 DemandTW=[demandstarttime;demandendtime];
 DmadStT=DemandTW(:,1);
 DmadEdT=DemandTW(:,2);
-pwt=1;
+% Candidate intervals describe an overlapping transfer service interval.
 numTS=size(TS,2);
 TS_solution_1=[];
 TS_solution_2=[];
@@ -20,7 +20,7 @@ for i=1:LengthA
     if i==1
         EARATA(1,i)=max(vhcstarttime(a,1)+vhcdemandtimematrix(a,processing_node),DmadStT(processing_node,1));
     else
-        Arrival_time1= EARATA(1,i-1)+timematrix(AwithoutEwithF(i-1),AwithoutEwithF(i));
+        Arrival_time1= EARATA(1,i-1)+op+timematrix(AwithoutEwithF(i-1),AwithoutEwithF(i));
         if processing_node>demand*2
             Arrival_time2=0;
         else
@@ -31,8 +31,8 @@ for i=1:LengthA
 end
 for i=1:LengthA
     if i==1
-        [depot_num,~]=find(depotendtime==depotA);
-        ReachTime1=depotendtime(depot_num,2)-vhcdemandtimematrix(a,AwithoutEwithF(LengthA));
+        [depot_num,~]=find(depotendtime(:,1)==depotA);
+        ReachTime1=min(depotendtime(depot_num,2),vhcendtime(a,2))-vhcdemandtimematrix(a,AwithoutEwithF(LengthA))-op;
         ReachTime2=DmadEdT(AwithoutEwithF(LengthA),1);
         LAARTA(LengthA-i+1)=min(ReachTime1,ReachTime2);
     else
@@ -51,7 +51,7 @@ for i=1:LengthB
     if i==1
         EARATB(1,i)=max(vhcstarttime(b,1)+vhcdemandtimematrix(b,processing_node),DmadStT(processing_node,1));
     else
-        Arrival_time1= EARATB(1,i-1)+timematrix(BwithoutFwithE(i-1),BwithoutFwithE(i));
+        Arrival_time1= EARATB(1,i-1)+op+timematrix(BwithoutFwithE(i-1),BwithoutFwithE(i));
         if processing_node>demand*2
             Arrival_time2=0;
         else
@@ -62,8 +62,8 @@ for i=1:LengthB
 end
 for i=1:LengthB
     if i==1
-        [depot_num,~]=find(depotendtime==depotB);
-        ReachTime1=depotendtime(depot_num,2)-vhcdemandtimematrix(b,BwithoutFwithE(LengthB));
+        [depot_num,~]=find(depotendtime(:,1)==depotB);
+        ReachTime1=min(depotendtime(depot_num,2),vhcendtime(b,2))-vhcdemandtimematrix(b,BwithoutFwithE(LengthB))-op;
         ReachTime2=DmadEdT(BwithoutFwithE(LengthB),1);
         LAARTB(LengthB-i+1)=min(ReachTime1,ReachTime2);
     else
@@ -82,8 +82,8 @@ A_TS=[];
 B_TS=[];
 for i=1:(LengthA-1)
     for t=1:numTS
-        TsArriveEarliest=EARATA(i)+timematrix(TS(t),AwithoutEwithF(i));
-        TsLeaveLatest=LAARTA(i+1)-timematrix(TS(t),AwithoutEwithF(i));
+        TsArriveEarliest=EARATA(i)+op+timematrix(AwithoutEwithF(i),TS(t));
+        TsLeaveLatest=LAARTA(i+1)-timematrix(TS(t),AwithoutEwithF(i+1));
         if TsLeaveLatest-TsArriveEarliest>=tsop
             A_TS_add=[i,t,TsArriveEarliest,TsLeaveLatest];
             A_TS=[A_TS;A_TS_add];
@@ -92,8 +92,8 @@ for i=1:(LengthA-1)
 end
 for i=1:(LengthB-1)
     for t=1:numTS
-        TsArriveEarliest=EARATB(i)+timematrix(TS(t),BwithoutFwithE(i));
-        TsLeaveLatest=LAARTB(i+1)-timematrix(TS(t),BwithoutFwithE(i));
+        TsArriveEarliest=EARATB(i)+op+timematrix(BwithoutFwithE(i),TS(t));
+        TsLeaveLatest=LAARTB(i+1)-timematrix(TS(t),BwithoutFwithE(i+1));
         if TsLeaveLatest-TsArriveEarliest>=tsop
             B_TS_add=[i,t,TsArriveEarliest,TsLeaveLatest];
             B_TS=[B_TS;B_TS_add];
@@ -106,18 +106,18 @@ SetTs=[];
 for i=1:ATS_num
     for j=1:BTS_num
         if A_TS(i,2)~=B_TS(j,2)
-            
+
         else
             LatestArrive=min(A_TS(i,4),B_TS(j,4));
             EarliestArrive=max(A_TS(i,3),B_TS(j,3));
-            T_coincide=LatestArrive+pwt-EarliestArrive;
-            if T_coincide>=op
+            T_coincide=LatestArrive-EarliestArrive;
+            if T_coincide>=tsop
                 t=B_TS(j,2);
                 a_node=A_TS(i,1);
                 b_node=B_TS(j,1);
                 SetTs=[SetTs;a_node,b_node,AwithoutEwithF(1,a_node),BwithoutFwithE(1,b_node),TS(1,t),EarliestArrive,LatestArrive];
             else
-                
+
             end
         end
     end

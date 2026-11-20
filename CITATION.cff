@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "Please cite the associated article when using this research code."
+title: "A Multi-Type Customized Shuttle Bus Route Planning Software"
+type: software
+authors:
+  - family-names: Zheng
+    given-names: Hao
+repository-code: "https://github.com/scholarhaozheng/A-Multi-Type-Customized-Shuttle-Bus-Route-Planning-Software"
+url: "https://github.com/scholarhaozheng/A-Multi-Type-Customized-Shuttle-Bus-Route-Planning-Software"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Zheng
+      given-names: Hao
+    - family-names: Zhang
+      given-names: Xingchen
+    - family-names: Chen
+      given-names: Junhua
+  title: "Study on Customized Shuttle Transit Mode Responding to Spatiotemporal Inhomogeneous Demand in Super-Peak"
+  journal: Information
+  year: 2021
+  month: 10
+  volume: 12
+  issue: 10
+  start: 429
+  doi: "10.3390/info12100429"
+  url: "https://www.mdpi.com/2078-2489/12/10/429"

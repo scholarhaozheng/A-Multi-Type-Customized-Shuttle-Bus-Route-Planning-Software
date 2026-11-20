@@ -1,6 +1,13 @@
-function [Cost,objective] = calculatetotalcost_test(solutioncell,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk)
-M = size(solutioncell,1);
-demandtime = [demandstarttime; demandendtime];
+function [Cost,objective] = calculatetotalcost_test(solutioncell,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk,op,tsop)
+% Repository weighted objective, with unit-passenger loads.
+% Defaults match the included snapshot; transfer partner waiting is excluded.
+if nargin < 12, op = 2; end
+if nargin < 13, tsop = 3; end
+if ~iscell(solutioncell) || (~isempty(solutioncell) && ~isvector(solutioncell))
+    error('Shuttle:SolutionShape','Routes must be a cell vector with one cell per vehicle.');
+end
+solutioncell = solutioncell(:);
+M = numel(solutioncell);
 
 %------------------------- Weight coefficients for each cost component
 alpha_1 = 0.15;   % cost coefficient
@@ -30,12 +37,24 @@ c_1 = 10; % inconvenience index 1 cost
 c_2 = 8; % inconvenience index 2 cost
 c_3 = 2; % inconvenience index 3 cost
 cpk = 3; % cost per unit of passenger onboard waiting time
-Ti = timematrix .* 3; % maximum passenger onboard time
 
 for i = 1:M    % loop over vehicles
     solution = solutioncell{i,1};
+    if ~isnumeric(solution) || ~isreal(solution) || ...
+            (~isempty(solution) && ~isvector(solution)) || ...
+            any(~isfinite(solution(:))) || any(solution(:) < 1) || ...
+            any(solution(:) ~= fix(solution(:))) || ...
+            any(solution(:) > size(timematrix,1)) || ...
+            any(solution(:) > size(vhcdemandtimematrix,2))
+        error('Shuttle:RouteStructure','Route %d contains an invalid node vector.',i);
+    end
+    solution = solution(:)';
+    [CapacityChain,validStructure] = CapacityPunishment(i,solution,demand,vhccapacity);
+    if ~validStructure
+        error('Shuttle:RouteStructure','Route %d has inconsistent pickup, delivery or transfer order.',i);
+    end
     k = size(solution,2); % calculate the number of demand points in each vehicle route chain
-    if k == 0 
+    if k == 0
         c_fixedcost = 0;
         c_traveltime = 0;
         c_patientonboardwaiting = 0;
@@ -44,48 +63,17 @@ for i = 1:M    % loop over vehicles
         quality_2 = 0;
         quality_3 = 0;
     else
-        tw_vhc = zeros(k,1);   % vehicle waiting time
-        tw_pas = zeros(k,1);
-        q = zeros(k,1);
-        %--------------------- Calculation for vehicle waiting time
-        d = solution(1,1);           
-        Tbegin = vhcstarttime(i,1); 
-        t0 = 0;
-        t0 = vhcdemandtimematrix(i,d);
-        Bi = zeros(k,1);
-        if Tbegin + t0 <= demandstarttime(d,1) 
-            tw_vhc(1,1) = demandstarttime(d,1) - Tbegin - t0;
-            t0 = demandstarttime(d,1);
-        else
-            tw_vhc(1,1) = 0;
-            t0 = t0 + Tbegin;
-        end
-        Bi(1,1) = t0;
-        for j = 1:k-1
-            u = solution(1,j);
-            v = solution(1,j+1);
-            t0 = t0 + timematrix(v,u);
-            if v > 2*demand
-                tw_vhc(j+1,1) = 0;
-                continue
-            end
-            if v <= size(demandtime,1)
-                if t0 <= demandtime(v,1)
-                    tw_vhc(j+1,1) = demandtime(v,1) - t0;
-                    t0 = demandtime(v,1);
-                else
-                    tw_vhc(j+1,1) = 0;
-                end
-            end
-            Bi(j+1,1) = t0;
-        end
-        T_vehicle = t0 + vhcdemandtimematrix(i,solution(1,k)) - Tbegin; % vehicle operating time
+        [~,Bi,~,tw_vhc,returnTime] = RouteSchedule(solution,i,vhcstarttime, ...
+            inf(M,2),demandstarttime,demandendtime,timematrix, ...
+            vhcdemandtimematrix,demand,op,tsop);
+        Bi = Bi(:);
+        tw_vhc = tw_vhc(:);
+        T_vehicle = returnTime - vhcstarttime(i,1);
         %--------------------- Calculation of vehicle capacity (passenger load)
-        [CapacityChain] = CapacityPunishment(i,solution,demand,vhccapacity);
         q = CapacityChain';
         %--------------------- Vehicle waiting time, passenger onboard waiting time, and operating time costs
         Tw_vhc = sum(tw_vhc,1); % vehicle waiting time
-        tw_pas(1,1) = 0;
+        tw_pas = zeros(k,1);
         for m = 2:k
             tw_pas(m,1) = q(m-1,1) * tw_vhc(m,1);
         end
@@ -94,7 +82,7 @@ for i = 1:M    % loop over vehicles
         c_patientonboardwaiting = cpk * Tw_pas; % total passenger onboard waiting time cost
         c_traveltime = ctk(i,1) * T_vehicle; % total vehicle operating time cost
         c_fixedcost = fixedcost(i,1);
-        quality_1 = 0;                  
+        quality_1 = 0;
         quality_2 = 0;
         quality_3 = 0;
         for j = 1:k
@@ -108,11 +96,10 @@ for i = 1:M    % loop over vehicles
             end
             if solution(1,j) > demand && solution(1,j) <= 2*demand
                 quality_2 = quality_2 + sqrt((Bi(j,1) - demandendtime(solution(1,j)-demand,1))^2);
-            end   
+            end
         end
-        %--------------------- Penalty function calculation (time window penalty, rated capacity penalty, passenger onboard time penalty)  
     end
- 
+
     C_fixedcost = C_fixedcost + c_fixedcost;
     C_traveltime = C_traveltime + c_traveltime;
     C_patientonboardwaiting = C_patientonboardwaiting + c_patientonboardwaiting;
@@ -122,7 +109,6 @@ for i = 1:M    % loop over vehicles
     Quality_2 = Quality_2 + c_2 * quality_2;
     Quality_3 = Quality_3 + c_3 * quality_3;
     Quality = beta_1 * Quality_1 + beta_2 * Quality_2 + beta_3 * Quality_3; % weighted total service quality
-    Cost = Cost + C + Quality;
 end
-Cost = Cost / 1000;
+Cost = (C + Quality) / 1000;
 objective = [Cost, C + Quality, C, C_fixedcost, C_traveltime, C_patientonboardwaiting, C_vehiclewaiting, Quality, Quality_1, Quality_2, Quality_3];

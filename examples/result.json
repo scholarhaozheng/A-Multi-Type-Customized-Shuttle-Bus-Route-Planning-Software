@@ -1,0 +1,96 @@
+{
+  "instance": "make_demo_instance",
+  "runtime": {
+    "name": "GNU Octave",
+    "version": "11.3.0",
+    "platform": "Windows"
+  },
+  "configuration": {
+    "MaxIterations": 5,
+    "Neighbors": 3,
+    "Seed": 7,
+    "EnableTransfers": false,
+    "Verbose": false
+  },
+  "requests": 6,
+  "vehicles": 3,
+  "depots": 2,
+  "capacities": [
+    2,
+    3,
+    4
+  ],
+  "initial_score": 0.6911713904941658,
+  "best_score": 0.6096573354776625,
+  "initial_routes": [
+    [
+      1,
+      2,
+      7,
+      8
+    ],
+    [
+      3,
+      4,
+      9,
+      10
+    ],
+    [
+      5,
+      6,
+      11,
+      12
+    ]
+  ],
+  "best_routes": [
+    [
+      4,
+      10,
+      3,
+      9
+    ],
+    [
+      5,
+      11,
+      6,
+      12
+    ],
+    [
+      2,
+      8,
+      1,
+      7
+    ]
+  ],
+  "initial_objective": {
+    "score": 0.6911713904941658,
+    "weighted_total": 691.1713904941657,
+    "weighted_cost": 97.3037415807202,
+    "fixed_cost": 180.0,
+    "operating_time_cost": 250.77159057548394,
+    "passenger_waiting_cost": 0.0,
+    "vehicle_waiting_cost": 25.369479789497344,
+    "weighted_service_quality": 593.8676489134456,
+    "pickup_quality": 1257.509690068058,
+    "delivery_quality": 193.99224794555357,
+    "detour_quality": 66.33436854000504
+  },
+  "objective": {
+    "score": 0.6096573354776625,
+    "weighted_total": 609.6573354776625,
+    "weighted_cost": 118.6001659647488,
+    "fixed_cost": 180.0,
+    "operating_time_cost": 310.23285846498965,
+    "passenger_waiting_cost": 10.583592135001261,
+    "vehicle_waiting_cost": 36.22291236000336,
+    "weighted_service_quality": 491.05716951291373,
+    "pickup_quality": 766.1481076865034,
+    "delivery_quality": 445.96695205078044,
+    "detour_quality": 31.055728090000827
+  },
+  "feasibility": {
+    "route_constraints_satisfied": true,
+    "has_transfers": false,
+    "feasible": true
+  }
+}
