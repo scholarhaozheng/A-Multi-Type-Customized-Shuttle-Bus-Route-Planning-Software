@@ -1,10 +1,10 @@
 function [ BestAlloverSolutionTs,BestAllOverCostTs ] = TsBestSolutionALNS0711( currentsolutioncell,SetTsOri,AwithFF,BwithEE,TS,demand,pickuppointA,pickuppointlocationA,a,pickuppointB,pickuppointlocationB,b,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop,SetTsMax,EachOptionMax)
-%%ÊäÈë£ºsolutionÖĞ²»°üÀ¨TSµã,°üÀ¨³ı½«Òª½»»»µÄµãÖ®ÍâµÄËùÓĞÏÂ³µµã,½«Òª²åÈëµÄµãÒÑ¾­²åÈë
-%%Êä³ö£ºÔÚInsertº¯ÊıÖ®Ç°£¬´ËÊ±solutionÖĞ°üÀ¨TSµã£¬°üÀ¨ÏÂ³µµã
+%%è¾“å…¥ï¼šsolutionä¸­ä¸åŒ…æ‹¬TSç‚¹,åŒ…æ‹¬é™¤å°†è¦äº¤æ¢çš„ç‚¹ä¹‹å¤–çš„æ‰€æœ‰ä¸‹è½¦ç‚¹,å°†è¦æ’å…¥çš„ç‚¹å·²ç»æ’å…¥
+%%è¾“å‡ºï¼šåœ¨Insertå‡½æ•°ä¹‹å‰ï¼Œæ­¤æ—¶solutionä¸­åŒ…æ‹¬TSç‚¹ï¼ŒåŒ…æ‹¬ä¸‹è½¦ç‚¹
 sizeTS=size(SetTsOri,1);
 
 %%%Solution a[1,2,5,91], solutionb[4,3,7,21]
-%%%[2,1,TS1](solution aÖĞµÄµÚ¶ş¸öÎ»ÖÃ£¬solution bÖĞµÄµÚÒ»¸öÎ»ÖÃ)
+%%%[2,1,TS1](solution aä¸­çš„ç¬¬äºŒä¸ªä½ç½®ï¼Œsolution bä¸­çš„ç¬¬ä¸€ä¸ªä½ç½®)
 % % SetTS=[3,4,207;3,1,205;
 % %     ];
 % % solutiona=[11,12,13,91];
@@ -32,47 +32,58 @@ end
 sizeTS=size(SetTs,1);
 demandtime=[demandstarttime;demandendtime];
 TS_solution=currentsolutioncell;
-BestAllOverCostTs=88888;
+BestAllOverCostTs=inf;
 BestAlloverSolutionTs={};
-TransOptionCosts=88888*ones(1,sizeTS);
+TransOptionCosts=inf*ones(1,sizeTS);
 numTransOption=0;
 if sizeTS==0
     BestAlloverSolutionTs={};
-    BestAllOverCostTs=8888888888;
+    BestAllOverCostTs=inf;
 else
     BestWayOfTransferAfterInsertingTS=cell(1,sizeTS);
     for i=1:sizeTS
-        %%¶ÔÓÚÃ¿ÖÖTSµã²åÈë·½Ê½%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%å¯¹äºæ¯ç§TSç‚¹æ’å…¥æ–¹å¼%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         TS_point=SetTs(i,5);
         positionA=SetTs(i,1);
         positionB=SetTs(i,2);
         DemandA=AwithFF(1,positionA);
         DemandB=BwithEE(1,positionB);
-        DemandWaitForTsA=AwithFF(1,1:positionA);%%%%%%%nodes(28,23,34)¶ø²»ÊÇĞòÁĞÊı(1,2,3)
+        DemandWaitForTsA=AwithFF(1,1:positionA);%%%%%%%nodes(28,23,34)è€Œä¸æ˜¯åºåˆ—æ•°(1,2,3)
         DemandWaitForTsB=BwithEE(1,1:positionB);
-        DemandWaitForTsA=DemandWaitForTsA(DemandWaitForTsA<=demand);
-        DemandWaitForTsB=DemandWaitForTsB(DemandWaitForTsB<=demand);
+        prefixA = DemandWaitForTsA;
+        DemandWaitForTsA=setdiff(prefixA(prefixA<=demand),prefixA(prefixA>demand & prefixA<=2*demand)-demand);
+        prefixB = DemandWaitForTsB;
+        DemandWaitForTsB=setdiff(prefixB(prefixB<=demand),prefixB(prefixB>demand & prefixB<=2*demand)-demand);
         SizeDmndWtFrTsA=size(DemandWaitForTsA,2);
         SizeDmndWtFrTsB=size(DemandWaitForTsB,2);
         for j=1:SizeDmndWtFrTsA
             NodeProceeding=DemandWaitForTsA(1,j);
-            EarliestReachDeliveryA=SetTs(i,6)+timematrix(TS_point,NodeProceeding+demand);
+            EarliestReachDeliveryA=SetTs(i,6)+tsop+timematrix(TS_point,NodeProceeding+demand);
             if EarliestReachDeliveryA>demandtime(NodeProceeding+demand,2)
-                DemandWaitForTsA(1,j)=999;
+                DemandWaitForTsA(1,j)=inf;
             end
         end
         for j=1:SizeDmndWtFrTsB
             NodeProceeding=DemandWaitForTsB(1,j);
-            EarliestReachDeliveryB=SetTs(i,6)+timematrix(TS_point,NodeProceeding+demand);
+            EarliestReachDeliveryB=SetTs(i,6)+tsop+timematrix(TS_point,NodeProceeding+demand);
             if EarliestReachDeliveryB>demandtime(NodeProceeding+demand,2)
-                DemandWaitForTsB(1,j)=999;
+                DemandWaitForTsB(1,j)=inf;
             end
         end
-        DemandWaitForTsA=DemandWaitForTsA(DemandWaitForTsA~=999);
-        DemandWaitForTsB=DemandWaitForTsB(DemandWaitForTsB~=999);
-        %%%%%½«ÆäÖĞµÄÏÂ³µµãÄÃµô
+        DemandWaitForTsA=DemandWaitForTsA(isfinite(DemandWaitForTsA));
+        DemandWaitForTsB=DemandWaitForTsB(isfinite(DemandWaitForTsB));
+        %%%%%å°†å…¶ä¸­çš„ä¸‹è½¦ç‚¹æ‹¿æ‰
         SizeTsA=size(DemandWaitForTsA,2);
         SizeTsB=size(DemandWaitForTsB,2);
+        % Bound the complete subset-pair space before allocating nchoosek arrays.
+        % EachOptionMax samples subset-size groups, not their contained pairs.
+        maxTransferCombinations = 10000;
+        if SizeTsA + SizeTsB > log2(maxTransferCombinations + 1)
+            error('Shuttle:TransferEnumerationLimit', ...
+                ['This meeting candidate exceeds the %d transfer subset-pair limit. ' ...
+                 'Use fewer onboard requests or run with EnableTransfers=false.'], ...
+                maxTransferCombinations);
+        end
         A_TS_conbinations_cell={};
         B_TS_conbinations_cell={};
         for j=0:SizeTsA
@@ -101,13 +112,11 @@ else
             end
         end
         NumOption=size(TransOption,2);
+        % Feasibility depends on both incoming and outgoing requests; evaluate
+        % each sampled pair rather than pruning by an incoming subset alone.
         TS_successful_num=0;
         TsSuccessfulCosts=[];
         TsSuccessfulSolutions={};
-        Acouldnot={};
-        Bcouldnot={};
-        AcouldnotCount=0;
-        BcouldnotCount=0;
         NumOptionProceeding=[];
         if size(TransOption,2)>EachOptionMax
             while size(NumOptionProceeding,2)<EachOptionMax
@@ -126,7 +135,7 @@ else
         end
         Sizeoptions=size(TransOptionProceeding,2);
         for j=1:Sizeoptions
-            %%%%%%%%%%%%%%%%%¶ÔÓÚÃ¿ÖÖÏÂ³µĞèÇóµã½»»»·½Ê½×é
+            %%%%%%%%%%%%%%%%%å¯¹äºæ¯ç§ä¸‹è½¦éœ€æ±‚ç‚¹äº¤æ¢æ–¹å¼ç»„
             option_proceeding=TransOptionProceeding{1,j};
             ATsToB_options=option_proceeding{1,1};
             BTsToA_options=option_proceeding{2,1};
@@ -136,56 +145,21 @@ else
                 continue
             elseif isempty(ATsToB_options)
                 for l=1:size(BTsToA_options,1)
-                    %%%%%%%%%%%%%¶ÔÓÚ×éÖĞµÄÃ¿ÖÖTSµã½»»»·½Ê½
+                    %%%%%%%%%%%%%å¯¹äºç»„ä¸­çš„æ¯ç§TSç‚¹äº¤æ¢æ–¹å¼
                     ATsToB=[];
                     BTsToA=BTsToA_options(l,:);
                     %%%%%%%%
-                    YN=1;
-                    for m=1:size(Acouldnot,1)
-                        Test=Acouldnot{m,:};
-                        SameElements=intersect(Test,BTsToA);
-                        Test=intersect(Test,Test);
-                        if isequal(SameElements,Test)
-                            YN=0;
-                            break
-                        end
-                    end
-                    if YN==0
-                        YNA=0;
-                        YNB=0;
-                        continue
-                    end
-                    for m=1:size(Bcouldnot,1)
-                        Test=Bcouldnot{m,:};
-                        SameElements=intersect(Test,ATsToB);
-                        Test=intersect(Test,Test);
-                        if isequal(SameElements,Test)
-                            YN=0;
-                            break
-                        end
-                    end
-                    if YN==0
-                        YNA=0;
-                        YNB=0;
-                        continue
-                    end
                     %%%%%%%%
                     [YNA,solutionAnew] = InsertdeliverypointALNS0711(AwithFF,TS_point,positionA,BTsToA,ATsToB,demand,pickuppointA,pickuppointlocationA,a,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);
                     if YNA==0
                         YNB=0;
-                        AcouldnotCount=AcouldnotCount+1;
-                        Acouldnot{AcouldnotCount,1}=BTsToA;
                         continue
                     end
                     [YNB,solutionBnew] = InsertdeliverypointALNS0711(BwithEE,TS_point,positionB,ATsToB,BTsToA,demand,pickuppointB,pickuppointlocationB,b,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);
-                    if YNB==0
-                        BcouldnotCount=BcouldnotCount+1;
-                        Bcouldnot{BcouldnotCount,1}=ATsToB;
-                    end
                     TS_solution{a,1}=solutionAnew;
                     TS_solution{b,1}=solutionBnew;
                     if YNA&&YNB
-                        [TsSuccessfulCost,~] = calculatetotalcost_test(TS_solution,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);
+                        [TsSuccessfulCost,~] = calculatetotalcost_test(TS_solution,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk,op,tsop);
                         TS_successful_num=TS_successful_num+1;
                         TsSuccessfulCosts(TS_successful_num)=TsSuccessfulCost;
                         TsSuccessfulSolutions{TS_successful_num}=TS_solution;
@@ -210,80 +184,17 @@ else
                     BTsToA=[];
                     ATsToB=ATsToB_options(k,:);
                     %%%%%%%%
-                    YN=1;
-                    for m=1:size(Acouldnot,1)
-                        Test=Acouldnot{m,:};
-                        SameElements=intersect(Test,BTsToA);
-                        Test=intersect(Test,Test);
-                        if isequal(SameElements,Test)
-                            YN=0;
-                            break
-                        end
-                    end
-                    if YN==0
-                        YNA=0;
-                        YNB=0;
-                        continue
-                    end
-                    for m=1:size(Bcouldnot,1)
-                        Test=Bcouldnot{m,:};
-                        SameElements=intersect(Test,ATsToB);
-                        Test=intersect(Test,Test);
-                        if isequal(SameElements,Test)
-                            YN=0;
-                            break
-                        end
-                    end
-                    if YN==0
-                        YNA=0;
-                        YNB=0;
-                        continue
-                    end
                     %%%%%%%%
-                    for m=1:size(Acouldnot,1)
-                        Test=Acouldnot{m,:};
-                        SameElements=intersect(Test,BTsToA);
-                        Test=intersect(Test,Test);
-                        if isequal(SameElements,Test)
-                            YN=0;
-                            break
-                        end
-                    end
-                    if YN==0
-                        YNA=0;
-                        YNB=0;
-                        continue
-                    end
-                    for m=1:size(Bcouldnot,1)
-                        Test=Bcouldnot{m,:};
-                        SameElements=intersect(Test,ATsToB);
-                        Test=intersect(Test,Test);
-                        if isequal(SameElements,Test)
-                            YN=0;
-                            break
-                        end
-                    end
-                    if YN==0
-                        YNA=0;
-                        YNB=0;
-                        continue
-                    end
                     [YNA,solutionAnew] = InsertdeliverypointALNS0711(AwithFF,TS_point,positionA,BTsToA,ATsToB,demand,pickuppointA,pickuppointlocationA,a,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);
                     if YNA==0
                         YNB=0;
-                        AcouldnotCount=AcouldnotCount+1;
-                        Acouldnot{AcouldnotCount,1}=BTsToA;
                         continue
                     end
                     [YNB,solutionBnew] = InsertdeliverypointALNS0711(BwithEE,TS_point,positionB,ATsToB,BTsToA,demand,pickuppointB,pickuppointlocationB,b,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);
-                    if YNB==0
-                        BcouldnotCount=BcouldnotCount+1;
-                        Bcouldnot{BcouldnotCount,1}=ATsToB;
-                    end
                     TS_solution{a,1}=solutionAnew;
                     TS_solution{b,1}=solutionBnew;
                     if YNA&&YNB
-                        [TsSuccessfulCost,~] = calculatetotalcost_test(TS_solution,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);
+                        [TsSuccessfulCost,~] = calculatetotalcost_test(TS_solution,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk,op,tsop);
                         TS_successful_num=TS_successful_num+1;
                         TsSuccessfulCosts(TS_successful_num)=TsSuccessfulCost;
                         TsSuccessfulSolutions{TS_successful_num}=TS_solution;
@@ -307,53 +218,18 @@ else
                     for l=1:size(BTsToA_options,1)
                         BTsToA=BTsToA_options(l,:);
                         %%%%%%%%
-                        YN=1;
-                        for m=1:size(Acouldnot,2)
-                            Test=Acouldnot{m,:};
-                            SameElements=intersect(Test,BTsToA);
-                            Test=intersect(Test,Test);
-                            if isequal(SameElements,Test)
-                                YN=0;
-                                break
-                            end
-                        end
-                        if YN==0
-                            YNA=0;
-                            YNB=0;
-                            continue
-                        end
-                        for m=1:size(Bcouldnot,2)
-                            Test=Bcouldnot{m,:};
-                            SameElements=intersect(Test,ATsToB);
-                            Test=intersect(Test,Test);
-                            if isequal(SameElements,Test)
-                                YN=0;
-                                break
-                            end
-                        end
-                        if YN==0
-                            YNA=0;
-                            YNB=0;
-                            continue
-                        end
                         %%%%%%%%
                         [YNA,solutionAnew] = InsertdeliverypointALNS0711(AwithFF,TS_point,positionA,BTsToA,ATsToB,demand,pickuppointA,pickuppointlocationA,a,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);
                         if YNA==0
                             YNB=0;
-                            AcouldnotCount=AcouldnotCount+1;
-                            Acouldnot{AcouldnotCount,1}=BTsToA;
                             continue
                         end
                         [YNB,solutionBnew] = InsertdeliverypointALNS0711(BwithEE,TS_point,positionB,ATsToB,BTsToA,demand,pickuppointB,pickuppointlocationB,b,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);
-                        if YNB==0
-                            BcouldnotCount=BcouldnotCount+1;
-                            Bcouldnot{BcouldnotCount,1}=ATsToB;
-                        end
                         if YNA&&YNB
                             TS_solution=currentsolutioncell;
                             TS_solution{a,1}=solutionAnew;
                             TS_solution{b,1}=solutionBnew;
-                            [TsSuccessfulCost,~] = calculatetotalcost_test(TS_solution,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);
+                            [TsSuccessfulCost,~] = calculatetotalcost_test(TS_solution,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk,op,tsop);
                             TS_successful_num=TS_successful_num+1;
                             TsSuccessfulCosts(TS_successful_num)=TsSuccessfulCost;
                             TsSuccessfulSolutions{TS_successful_num}=TS_solution;
@@ -376,13 +252,13 @@ else
             if isempty(TsSuccessfulCosts)
                 continue
             end
-            %%solution_originalÎªÃ»ÓĞdelivery pointºÍTSµãµÄÇé¿ö£¬
-            %%TSÎªÄ³µãÎ»ÖÃ TSµã²åÈë¸ÃµãÖ®ºó£¬BTsToAÎªAĞèÒªÔËËÍµÄ¶îÍâµã
+            %%solution_originalä¸ºæ²¡æœ‰delivery pointå’ŒTSç‚¹çš„æƒ…å†µï¼Œ
+            %%TSä¸ºæŸç‚¹ä½ç½® TSç‚¹æ’å…¥è¯¥ç‚¹ä¹‹åï¼ŒBTsToAä¸ºAéœ€è¦è¿é€çš„é¢å¤–ç‚¹
         end
         if TS_successful_num==0
             continue
         end
-        %%%%Ä³ÖÖTSµã²åÈë·½Ê½µÄ×îÓÅ½â
+        %%%%æŸç§TSç‚¹æ’å…¥æ–¹å¼çš„æœ€ä¼˜è§£
         [BestCostOfThisTS,SequenceBestTransOption]=min(TsSuccessfulCosts);
         BestTransOption=TsSuccessfulSolutions{1,SequenceBestTransOption};
         if isempty(BestTransOption)

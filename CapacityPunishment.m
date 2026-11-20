@@ -1,50 +1,53 @@
-function [ CapacityChain ] = CapacityPunishment(index,vehicle_chain,demand,vhccapacity)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-TsPoints=vehicle_chain(vehicle_chain>2*demand);
-CapacityChain=zeros(1,size(vehicle_chain,2));
-if isempty(TsPoints)
-    for i=1:size(vehicle_chain,2)
-        if i==1
-            CapacityChain(1,1)=1;
-        else
-            if vehicle_chain(1,i)<=demand
-                CapacityChain(1,i)=CapacityChain(1,i-1)+1;
-            else
-                CapacityChain(1,i)=CapacityChain(1,i-1)-1;
-            end
+function [CapacityChain,valid] = CapacityPunishment(index,vehicle_chain,demand,vhccapacity)
+% Unit-passenger loads after each node; at most one transfer per route.
+% Missing pickup/delivery counterparts identify transfers between vehicles.
+route = vehicle_chain(:)';
+CapacityChain = zeros(size(route));
+valid = true;
+if isempty(route)
+    return
+end
+if any(~isfinite(route)) || any(route < 1) || any(route ~= fix(route)) || ...
+        numel(unique(route)) ~= numel(route)
+    valid = false;
+    return
+end
+transfer = find(route > 2*demand);
+pickups = route(route <= demand);
+deliveries = route(route > demand & route <= 2*demand) - demand;
+outgoing = setdiff(pickups,deliveries);
+incoming = setdiff(deliveries,pickups);
+if numel(transfer) > 1 || (isempty(transfer) && ...
+        (~isempty(outgoing) || ~isempty(incoming)))
+    valid = false;
+end
+for request = intersect(pickups,deliveries)
+    if find(route == request,1) >= find(route == request+demand,1)
+        valid = false;
+    end
+end
+if numel(transfer) == 1
+    for request = outgoing
+        if find(route == request,1) >= transfer
+            valid = false;
         end
     end
-else
-    if size(TsPoints,2)>1
-    vehicle_chain
-    TsPoints
-    end
-    [~,position]=find(vehicle_chain==TsPoints);
-    for i=1:position-1
-        if i==1
-            CapacityChain(1,1)=1;
-        else
-            if vehicle_chain(1,i)<=demand
-                CapacityChain(1,i)=CapacityChain(1,i-1)+1;
-            else
-                CapacityChain(1,i)=CapacityChain(1,i-1)-1;
-            end
-        end
-    end
-    Pickups=vehicle_chain(vehicle_chain<=demand);
-    Deliverys=vehicle_chain(vehicle_chain>demand);
-    PickUpAndDelivery=intersect(Pickups,Deliverys);
-    OnlyPickUp=setdiff(Pickups,PickUpAndDelivery);
-    OnlyDeliver=setdiff(Deliverys,PickUpAndDelivery);
-    CapacityChain(1,position)=CapacityChain(1,position-1)+size(OnlyDeliver,2)-size(OnlyPickUp,2);
-    for i=position+1:size(vehicle_chain,2)
-        if vehicle_chain(1,i)<=demand
-            CapacityChain(1,i)=CapacityChain(1,i-1)+1;
-        else
-            CapacityChain(1,i)=CapacityChain(1,i-1)-1;
+    for request = incoming
+        if find(route == request+demand,1) <= transfer
+            valid = false;
         end
     end
 end
-
-
+load = 0;
+for j = 1:numel(route)
+    if route(j) <= demand
+        load = load + 1;
+    elseif route(j) <= 2*demand
+        load = load - 1;
+    elseif numel(transfer) == 1
+        load = load + numel(incoming) - numel(outgoing);
+    end
+    CapacityChain(j) = load;
+end
+valid = valid && all(CapacityChain >= 0) && CapacityChain(end) == 0;
+end

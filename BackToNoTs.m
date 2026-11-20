@@ -1,69 +1,49 @@
 function [YN,solutionaReinsertOut] = BackToNoTs(index,currentsolutioncell,CurrentNoTsSolutionCell,TsRelationship,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,des_option,rep_option,TravelTimeMax,op,tsop,SetTsMax,EachOptionMax,iteration,solutionaReinsert)
-%UNTITLED4 此处显示有关此函数的摘要
-%   此处显示详细说明
-YN=0;
-yn=0;
-aInsertList=solutionaReinsert;
-solutionaReinsertOri=solutionaReinsert;
-aInsertListOptionsOri=perms(aInsertList);
-NumaInsertListOptions=[];
-aInsertListOptions=aInsertListOptionsOri;
-if size(aInsertListOptionsOri,1)>8
-    aInsertListOptions=[];
-    while size(NumaInsertListOptions,2)<8
-        add=randi(ceil(size(aInsertListOptionsOri,1)));
-        if find(NumaInsertListOptions==add)
-            continue
+% Reinsert deliveries for the vehicle's pickups, considering at most 8 orders.
+YN = 0;
+solutionaReinsertOut = [];
+requests = solutionaReinsert(:)';
+if isempty(requests)
+    YN = 1;
+    return
+end
+if numel(requests) <= 3
+    orders = perms(requests);
+else
+    orders = requests;
+    for attempt = 1:64
+        candidate = requests(randperm(numel(requests)));
+        if ~ismember(candidate,orders,'rows')
+            orders = [orders;candidate];
         end
-        NumaInsertListOptions=[NumaInsertListOptions,add];
-    end
-    for k=1:size(NumaInsertListOptions,2)
-        aInsertListOptions=[aInsertListOptions;aInsertListOptionsOri(NumaInsertListOptions(1,k),:)];
+        if size(orders,1) == 8, break; end
     end
 end
-
-for kk=1:size(aInsertListOptions,1)
-    solutionaReinsert=solutionaReinsertOri;
-    aInsertList=aInsertListOptions(kk,:);
-    a_insert=solutionaReinsert;
-    for i=1:size(aInsertList,2)
-        aLastRound=a_insert;
-        sizea=size(a_insert,2);
-        a_insert=solutionaReinsert;
-        [~,positionNew]=find(aLastRound==aInsertList(i));
-        for j=positionNew:sizea
-            if j==sizea
-                aPart1=a_insert(1,1:j);
-                aPart2=[];
-            else
-                aPart1=a_insert(1,1:j);
-                aPart2=a_insert(1,j+1:sizea);
-            end
-            a_insert=[aPart1,demand+aInsertList(i),aPart2];
-            yn = judgement_op(a_insert,index,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,demand,op,tsop);
-            [ YNtime ] = CalculatingTotalTime(index,a_insert,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk,TravelTimeMax);
-            if yn==1||YNtime==1
+for row = 1:size(orders,1)
+    route = requests;
+    successful = true;
+    for request = orders(row,:)
+        base = route;
+        pickupPosition = find(base == request,1);
+        found = false;
+        for after = pickupPosition:numel(base)
+            candidate = [base(1:after),request+demand,base(after+1:end)];
+            if judgement_op(candidate,index,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,demand,op,tsop) && ...
+                    CalculatingTotalTime(index,candidate,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk,TravelTimeMax)
+                route = candidate;
+                found = true;
                 break
-            else
-                a_insert=aLastRound;
             end
         end
-        if yn == 0
-            YN=0;
-            solutionaReinsert=[];
+        if ~found
+            successful = false;
             break
-        else
-            YN=1;
-            solutionaReinsert=a_insert;
         end
     end
-    if YN==1
-        solutionaReinsertOut=solutionaReinsert;
-        break
+    if successful && CapacityCheck(index,route,demand,vhccapacity)
+        YN = 1;
+        solutionaReinsertOut = route;
+        return
     end
 end
-if YN==0
-    solutionaReinsertOut=[];
 end
-
-

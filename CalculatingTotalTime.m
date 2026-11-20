@@ -6,6 +6,7 @@ else
     for j=1:size(vehicle_chain,2)-1
         TravelTime=TravelTime+timematrix(vehicle_chain(1,j),vehicle_chain(1,j+1));
     end
+    TravelTime=TravelTime+vhcdemandtimematrix(index,vehicle_chain(end));
     if TravelTime>TravelTimeMax
         YN=0;
     else

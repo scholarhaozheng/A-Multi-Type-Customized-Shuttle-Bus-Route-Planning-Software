@@ -1,318 +1,189 @@
-tic
-clear all;
-clc;
-
-% % % TravelTimeMax=500;
-% % % maxiteration = 1;%---------------停止规则为到达一定迭代步数即停止
-% % % vhcnum = 170;%车辆数量
-% % % demand = 476;%需求数量
-% % % neignum = 10;%邻居数量
-% % % tabulength = 30;%可以变化长度，但要放在大循环里------------------------------------------------禁忌长度
-% % % alpha1=33;
-% % % alpha2=9;
-% % % alpha3=13;
-% % % r=0.1;
-% % % tsNum=3;
-% % % depotNum=5;
-% % % TS=[2*demand+1,2*demand+2,2*demand+3];
-% % % op=2;
-% % % tsop=3;
-% % % SetTsMax=16;
-% % % EachOptionMax=8;
-% % % lambda=20;
-% % % demandv=demand+1;
-% % % demandstarttime = xlsread('.\result0731_right.xlsx',1,['F2:G' num2str(demandv)]);
-% % % demandendtime = xlsread('.\result0731_right.xlsx',1,['H2:I' num2str(demandv)]);
-% % % demandstartlocation = xlsread('.\result0731_right.xlsx',1,['B2:C' num2str(demandv)]);
-% % % demandendlocation = xlsread('.\result0731_right.xlsx',1,['D2:E' num2str(demandv)]);
-% % % tsv1=demandv+1;
-% % % tsv2=tsv1+tsNum-1;
-% % % depv1=tsv2+1;
-% % % depv2=depv1+depotNum-1;
-% % % tsLocation=xlsread('.\result0731_right.xlsx',1,['B' num2str(tsv1) ':C' num2str(tsv2)]);
-% % % depLocation=xlsread('.\result0731_right.xlsx',1,['B' num2str(depv1) ':C' num2str(depv2)]);
-% % % demandlocation=[demandstartlocation;demandendlocation];
-% % % allLocation=[demandlocation;tsLocation;depLocation];
-% % % demandtime=[demandstarttime;demandendtime];
-% % % distancematrix = generatedismatrix1(allLocation,allLocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
-% % % timematrix = distancematrix*2;%速度0.5km/min,单位min
-% % % % vhclocation = zeros(vhcnum,1); %车辆位置
-% % % % vhctype = zeros(vhcnum,1);    %车辆类型
-% % % % vhccapacity = zeros(vhcnum,1); %车辆额定载客量
-% % % % vhcdepot = zeros(vhcnum,1);  %车辆所属场站
-% % % indexv=vhcnum+1;
-% % % vhcdepot = xlsread('.\vechleinfomation0730_1000.xlsx',1,['O2:O' num2str(indexv)]);%车辆-路网编号 O2:O16为车辆的起始场站编号
-% % % for i=1:vhcnum
-% % %     vhclocation(i,1) = allLocation(vhcdepot(i,1),1);
-% % %     vhclocation(i,2) = allLocation(vhcdepot(i,1),2);
-% % % end
-% % % vhctype = xlsread('.\vechleinfomation0730_1000.xlsx',1,['C2:C' num2str(indexv)]);
-% % % vhccapacity = xlsread('.\vechleinfomation0730_1000.xlsx',1,['D2:D' num2str(indexv)]);
-% % % vhcstarttime = xlsread('.\vechleinfomation0730_1000.xlsx',1,['F2:G' num2str(indexv)]);
-% % % vhcendtime = xlsread('.\vechleinfomation0730_1000.xlsx',1,['H2:I' num2str(indexv)]);
-% % % fixedcost = xlsread('.\vechleinfomation0730_1000.xlsx',1,['J2:J' num2str(indexv)]);%车辆固定成本
-% % % % ck = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0730_1000airport.xlsx','K2:K21');%车辆运行单位长度成本
-% % % cwk = xlsread('.\vechleinfomation0730_1000.xlsx',1,['L2:L' num2str(indexv)]);%车辆等待单位时间成本
-% % % ctk = xlsread('.\vechleinfomation0730_1000.xlsx',1,['M2:M' num2str(indexv)]);%车辆运行单位时间成本
-% % % depotendtime=[demand*2+tsNum+1,780;demand*2+tsNum+2,780;demand*2+tsNum+3,780;demand*2+tsNum+4,780;demand*2+tsNum+5,780;];
-% % % % L0 = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0730_1000airport.xlsx','N2:N21');%固定成本所能运行的距离
-% % % 
-% % % %计算场站-需求timematrix矩阵
-% % % % vhcdemanddistancematrix = generatedismatrix1(vhclocation,demandlocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
-% % % % vhcdemandtimematrix = vhcdemanddistancematrix*0.2;%速度30km/h,单位min
-% % % vhcdemandtimematrix = calvhcdemandtimematrix(vhcnum,demand,tsNum,depotNum,timematrix,vhcdepot);
-% % % [inisolution1,inireject1] = GenerateinisolutionRight0410(demand,demandstarttime,demandendtime,vhclocation,vhcstarttime,vhcendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);%------------函数：初始解生成（节约法）
-% % % [inicost1,~] = calculatetotalcost_test(inisolution1,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);%-------------------函数：对解进行计算目标值
-% % % 
-% % % TravelTimeMax=500;
-% % % maxiteration = 1;%---------------停止规则为到达一定迭代步数即停止
-% % % vhcnum = 170;%车辆数量
-% % % demand = 1000;%需求数量
-% % % neignum = 10;%邻居数量
-% % % tabulength = 30;%可以变化长度，但要放在大循环里------------------------------------------------禁忌长度
-% % % alpha1=33;
-% % % alpha2=9;
-% % % alpha3=13;
-% % % r=0.1;
-% % % tsNum=3;
-% % % depotNum=5;
-% % % TS=[2*demand+1,2*demand+2,2*demand+3];
-% % % op=2;
-% % % tsop=3;
-% % % SetTsMax=16;
-% % % EachOptionMax=8;
-% % % lambda=20;
-% % % demandv=demand+1;
-% % % demandstarttime = xlsread('.\result0731_right.xlsx',1,['F2:G' num2str(demandv)]);
-% % % demandendtime = xlsread('.\result0731_right.xlsx',1,['H2:I' num2str(demandv)]);
-% % % demandstartlocation = xlsread('.\result0731_right.xlsx',1,['B2:C' num2str(demandv)]);
-% % % demandendlocation = xlsread('.\result0731_right.xlsx',1,['D2:E' num2str(demandv)]);
-% % % tsv1=demandv+1;
-% % % tsv2=tsv1+tsNum-1;
-% % % depv1=tsv2+1;
-% % % depv2=depv1+depotNum-1;
-% % % tsLocation=xlsread('.\result0731_right.xlsx',1,['B' num2str(tsv1) ':C' num2str(tsv2)]);
-% % % depLocation=xlsread('.\result0731_right.xlsx',1,['B' num2str(depv1) ':C' num2str(depv2)]);
-% % % demandlocation=[demandstartlocation;demandendlocation];
-% % % allLocation=[demandlocation;tsLocation;depLocation];
-% % % demandtime=[demandstarttime;demandendtime];
-% % % distancematrix = generatedismatrix1(allLocation,allLocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
-% % % timematrix = distancematrix*2;%速度0.5km/min,单位min
-% % % % vhclocation = zeros(vhcnum,1); %车辆位置
-% % % % vhctype = zeros(vhcnum,1);    %车辆类型
-% % % % vhccapacity = zeros(vhcnum,1); %车辆额定载客量
-% % % % vhcdepot = zeros(vhcnum,1);  %车辆所属场站
-% % % indexv=vhcnum+1;
-% % % vhcdepot = xlsread('.\vechleinfomation0730_1000.xlsx',1,['O2:O' num2str(indexv)]);%车辆-路网编号 O2:O16为车辆的起始场站编号
-% % % for i=1:vhcnum
-% % %     vhclocation(i,1) = allLocation(vhcdepot(i,1),1);
-% % %     vhclocation(i,2) = allLocation(vhcdepot(i,1),2);
-% % % end
-% % % vhctype = xlsread('.\vechleinfomation0730_1000.xlsx',1,['C2:C' num2str(indexv)]);
-% % % vhccapacity = xlsread('.\vechleinfomation0730_1000.xlsx',1,['D2:D' num2str(indexv)]);
-% % % vhcstarttime = xlsread('.\vechleinfomation0730_1000.xlsx',1,['F2:G' num2str(indexv)]);
-% % % vhcendtime = xlsread('.\vechleinfomation0730_1000.xlsx',1,['H2:I' num2str(indexv)]);
-% % % fixedcost = xlsread('.\vechleinfomation0730_1000.xlsx',1,['J2:J' num2str(indexv)]);%车辆固定成本
-% % % % ck = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0730_1000airport.xlsx','K2:K21');%车辆运行单位长度成本
-% % % cwk = xlsread('.\vechleinfomation0730_1000.xlsx',1,['L2:L' num2str(indexv)]);%车辆等待单位时间成本
-% % % ctk = xlsread('.\vechleinfomation0730_1000.xlsx',1,['M2:M' num2str(indexv)]);%车辆运行单位时间成本
-% % % depotendtime=[demand*2+tsNum+1,780;demand*2+tsNum+2,780;demand*2+tsNum+3,780;demand*2+tsNum+4,780;demand*2+tsNum+5,780;];
-% % % % L0 = xlsread('C:\Users\lenovo\Desktop\定制公交线路规划程序\vechleinfomation0730_1000airport.xlsx','N2:N21');%固定成本所能运行的距离
-% % % 
-% % % %计算场站-需求timematrix矩阵
-% % % % vhcdemanddistancematrix = generatedismatrix1(vhclocation,demandlocation);%----函数:生成一个N*2M的距离矩阵，行下标为各起点，列下表为各终点
-% % % % vhcdemandtimematrix = vhcdemanddistancematrix*0.2;%速度30km/h,单位min
-% % % vhcdemandtimematrix = calvhcdemandtimematrix(vhcnum,demand,tsNum,depotNum,timematrix,vhcdepot);
-% % % [inisolution1,inireject1] = GenerateinisolutionRight0410(demand,demandstarttime,demandendtime,vhclocation,vhcstarttime,vhcendtime,timematrix,vhcdemandtimematrix,vhccapacity,fixedcost,cwk,ctk,TravelTimeMax,op,tsop);%------------函数：初始解生成（节约法）
-% % % [inicost1,~] = calculatetotalcost_test(inisolution1,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);%-------------------函数：对解进行计算目标值
-% % % 
-% % % 
-load initial0805_concentrate
-tabulist = ones(tabulength,7);
-
-His_TsRelationship=cell(maxiteration,1);
-His_solution=cell(maxiteration,1);
-His_no_ts_solution=cell(maxiteration,1);
-
-clc;
-
-bestsolution = inisolution1;%最优解为初始解
-bestcost = inicost1;%最优目标为当前目标
-currentsolution = inisolution1;%当前解为初始解
-currentcost = inicost1;%当前目标为初始目标
-tablesolutionneig = zeros(neignum,7);%邻域表，通过函数生成
-tablecostneig = zeros(neignum,1);%邻域的目标值
-bestsolutionneig = zeros(1,7);
-bestsolutiontabuneig = zeros(1,7);
-%启动迭代
-bestcosttabuneig = inicost1;
-bestcostneig = inicost1;
-His_best=zeros(maxiteration,1);%记录每次迭代的最优解
-CurrentCost=zeros(maxiteration,1);
-CurrentNoTsSolution=bestsolution;
-CurrentNoTsSolutionCell=cell(maxiteration,1);
-TsRelationship=zeros(vhcnum,2);
-%%objective = zeros(maxiteration,11);
-omega_des=0.2*ones(1,5);
-omega_rep=0.333333333*ones(1,3);
-omega_des1=0.2*ones(1,5);
-omega_rep1=0.333333333*ones(1,3);
-Choose_history_des=zeros(maxiteration,neignum);
-Choose_history_rep=zeros(maxiteration,neignum);
-for i = 1:maxiteration
-    CurrentCost(i,1)=currentcost;
-    display(['%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%']);
-    display(['iteration of main function is ' num2str(i)]);
-    tabletransitsolution=cell(neignum,1);
-    TsRelationshipsCell=cell(neignum,1);
-    NoTsSolutionNeigCell=cell(1,neignum);
-    TsOrNot=zeros(1,neignum);
-    notscostneig=zeros(neignum,1);
-    for j = 1:neignum %生成邻域解
-        lambda=10;
-        if i/lambda-ceil(i/lambda)==0
-            omega_des=0.2*ones(1,5);
-            omega_rep=0.333333333*ones(1,3);
-        end
-        omega_des1=omega_des;
-        omega_rep1=omega_rep;
-        desORrep=1;
-        [ des_option ] = GeneratingOperatorsChoice( i,lambda,desORrep,omega_des);
-        desORrep=2;
-        [ rep_option ] = GeneratingOperatorsChoice( i,lambda,desORrep,omega_rep );
-        Choose_history_des(i,j)=des_option;
-        Choose_history_rep(i,j)=rep_option;
-        display(['——————————————————————————']);
-                display(['neighbor ' num2str(j) ' is using ' num2str(des_option)  ' des_option, and ' num2str(rep_option) ' rep_option']);
-                [TsRelationNewWithTS,TsRelationNew,tablesolutionneigj, transitsolution_NoTs, BestAlloverSolutionTs,BestAllOverCostTs] = DestroyandRepair_swap_2opt_func0803_edit_rep_1(currentsolution,CurrentNoTsSolutionCell,TsRelationship,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,des_option,rep_option,TravelTimeMax,op,tsop,SetTsMax,EachOptionMax,i,His_TsRelationship);
-                [NoTsCost,~] = calculatetotalcost_test(transitsolution_NoTs,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);
-                %%%%%%transitsolution为已经插入下车点的解；tablesolutionneig = [1,a,e,b,f];
-                %%%%%%best solution neig 和best solution tabu neig是0
-                NoTsSolutionNeigCell{1,j}=transitsolution_NoTs;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                if NoTsCost<=BestAllOverCostTs%%%%%不带TS的情况更优
-                    tablecostneig(j,1)=NoTsCost;
-                    tabletransitsolution{j,:}=transitsolution_NoTs;
-                    display(['NoTsCost= ' num2str(NoTsCost) ',  BestAllOverCostTs= ' num2str(BestAllOverCostTs)  ]);
-                    display(['Solution without Ts point is better']);
-                    TsRelationshipsCell{j,1}=TsRelationNew;
-                    TsOrNot(1,j)=0;
-                else
-                    display(['NoTsCost= ' num2str(NoTsCost) ',  BestAllOverCostTs= ' num2str(BestAllOverCostTs)  ]);
-                    tablecostneig(j,1)=BestAllOverCostTs;
-                    tabletransitsolution{j,:}=BestAlloverSolutionTs;
-                    display(['Solution with Ts point is better']);
-                    TsRelationshipsCell{j,1}=TsRelationNewWithTS;
-                    TsOrNot(1,j)=1;
-                end
-                %%[tablecostneig(j,1),~] = calculatetotalcost(transitsolution,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk);
-                notscostneig(j,1)= NoTsCost;
-        %%tablesolutionneig = [1 OR 2,a,e,insertpositiona,b,f,insertpositionb];
-        tablesolutionneig(j,:) = tablesolutionneigj;
-    end
-    solutionneigtabumode = zeros(neignum,1);%邻域禁忌状态
-    for j = 1:neignum
-        for k = 1:tabulength
-            if tablesolutionneig(j,:) == tabulist(k,1:7) %如果邻域解被禁忌，状态为1
-                solutionneigtabumode(j,1) = 1;
-                break
-            end
-        end
-    end
-    index=0;
-    tabuindex=0;
-    bestcostneig=9999999999;
-    for j = 1:neignum %分别遍历邻域表和禁忌表的最优解
-        if solutionneigtabumode(j,1) == 0 %比较禁忌状态为0的邻域解，若目标函数小于最优邻域解，则替换最优邻域解
-            if tablecostneig(j,1) < bestcostneig
-                bestsolutionneig = tablesolutionneig(j,:);
-                bestcostneig = tablecostneig(j,1);
-                index = j;
-            end
-        else
-            if tablecostneig(j,1) < bestcosttabuneig %比较禁忌状态为1的邻域解，若目标函数小于最优禁忌解，则替换最优禁忌解
-                bestsolutiontabuneig = tablesolutionneig(j,:);
-                bestcosttabuneig = tablecostneig(j,1);
-                tabuindex = j;
-            end
-        end
-    end
-    display(['……………………………………………………………………']);
-    display(['Bestcosttabuneig: ' num2str(bestcosttabuneig) ', tabuindex: ' num2str(tabuindex)]);
-    display(['Bestcostneig: ' num2str(bestcostneig) ', index: ' num2str(index) ', TsOrNot is ' num2str(TsOrNot(1,index))]);
-    if bestcosttabuneig < bestcost %若最优禁忌解小于最优解，则解禁
-        tabuuseful=1;
-        bestcost = bestcosttabuneig;
-        bestsolution = tabletransitsolution{tabuindex,:};
-        CurrentNoTsSolution=NoTsSolutionNeigCell{1,tabuindex};
-        TsRelationship=TsRelationshipsCell{tabuindex,1};
-        currentsolution = bestsolution;
-        currentcost = bestcost;
-        TabuAdd = [bestsolutiontabuneig(1,1) bestsolutiontabuneig(1,5:7) bestsolutiontabuneig(1,2:4)];
-        tabulist = [tabulist(2:tabulength,1:7);TabuAdd];
-        display(['bestcosttabuneig < bestcost, ' ]);
-        omega_des1(1,des_option)=omega_des1(1,des_option)+alpha1;
-        omega_rep1(1,rep_option)=omega_rep1(1,rep_option)+alpha1;
-    else
-        %bestcostneig为最优邻域解
-        currentsolution = tabletransitsolution{index,:};
-        CurrentNoTsSolution=NoTsSolutionNeigCell{1,index};
-        TsRelationship=TsRelationshipsCell{index,1};
-        TabuAdd = [bestsolutionneig(1,1) bestsolutionneig(1,5:7) bestsolutionneig(1,2:4)];
-        tabulist = [tabulist(2:tabulength,1:7);TabuAdd];
-        if currentcost<bestcostneig
-            omega_des1(1,des_option)=omega_des1(1,des_option)+alpha3;
-            omega_rep1(1,rep_option)=omega_rep1(1,rep_option)+alpha3;
-        else
-            omega_des1(1,des_option)=omega_des1(1,des_option)+alpha2;
-            omega_rep1(1,rep_option)=omega_rep1(1,rep_option)+alpha2;
-        end
-        currentcost = bestcostneig;
-        if bestcostneig < bestcost %%%%%若最优邻域解小于历史最优解
-            bestcost = currentcost;
-            bestsolution = currentsolution;
-            omega_des1(1,des_option)=omega_des1(1,des_option)+alpha1;
-            omega_rep1(1,rep_option)=omega_rep1(1,rep_option)+alpha1;
-        end
-    end
-    CurrentNoTsSolutionCell{i,1}=CurrentNoTsSolution;
-    His_best(i,1)=bestcost;
-    His_TsRelationship{i,1}=TsRelationship;
-    His_solution{i,1}=currentsolution;
-    His_no_ts_solution{i,1}=CurrentNoTsSolution;
-    if i/lambda-ceil(i/lambda)==0
-        omega_des=omega_des1;
-        omega_rep=omega_rep1;
+function result = MDVRPTW(source, options)
+%MDVRPTW Run ALNS/Tabu route operators from a supplied initial solution.
+% MDVRPTW(make_demo_instance(),struct('MaxIterations',5)) runs a small case.
+% MDVRPTW([],struct('MaxIterations',0)) evaluates the supplied MAT snapshot.
+if nargin < 1, source = []; end
+if nargin < 2, options = struct(); end
+if ~isstruct(options) || ~isscalar(options)
+    error('Shuttle:Options','Options must be a scalar struct.');
+end
+data = LoadShuttleInstance(source);
+defaults = struct('MaxIterations',10,'Neighbors',3,'Seed',7, ...
+    'EnableTransfers',false,'Verbose',false,'OutputDir','');
+names = fieldnames(options);
+for k = 1:numel(names)
+    if ~isfield(defaults,names{k}), error('Shuttle:UnknownOption','Unknown option: %s',names{k}); end
+    defaults.(names{k}) = options.(names{k});
+end
+options = defaults;
+validateattributes(options.MaxIterations,{'numeric'},{'scalar','real','finite','integer','nonnegative'});
+validateattributes(options.Neighbors,{'numeric'},{'scalar','real','finite','integer','positive'});
+validateattributes(options.Seed,{'numeric'},{'scalar','real','finite','integer','nonnegative','<=',2^32-1});
+validateattributes(options.EnableTransfers,{'logical','numeric'},{'scalar','real','finite','binary'});
+validateattributes(options.Verbose,{'logical','numeric'},{'scalar','real','finite','binary'});
+if isstring(options.OutputDir) && isscalar(options.OutputDir)
+    options.OutputDir = char(options.OutputDir);
+end
+if ~ischar(options.OutputDir) || (~isempty(options.OutputDir) && ~isrow(options.OutputDir))
+    error('Shuttle:OutputDir','OutputDir must be a character row or a scalar string.');
+end
+validateattributes(data.lambda,{'numeric'},{'scalar','integer','positive'});
+validateattributes(data.tabulength,{'numeric'},{'scalar','integer','positive'});
+validateattributes(data.r,{'numeric'},{'scalar','>=',0,'<=',1});
+oldRng = rng; cleanupRng = onCleanup(@() rng(oldRng)); %#ok<NASGU>
+rng(options.Seed,'twister'); started = tic;
+initial = data.inisolution1;
+initialValidation = ValidateSolution(initial,data);
+if options.MaxIterations > 0 && ~initialValidation.feasible
+    error('Shuttle:InitialFeasibility', ...
+        ['Initial routes are not certified feasible. Use MaxIterations=0 to inspect ' ...
+         'validation.issues; run_demo supplies a feasible small instance.']);
+end
+cost = @(s) calculatetotalcost_test(s,data.demand,data.vhccapacity, ...
+    data.demandstarttime,data.demandendtime,data.vhcstarttime,data.timematrix, ...
+    data.vhcdemandtimematrix,data.fixedcost,data.cwk,data.ctk,data.op,data.tsop);
+[initialCost,initialObjective] = cost(initial);
+current = initial; best = initial; currentCost = initialCost; bestCost = initialCost;
+relations = zeros(data.vhcnum,2); bestRelations = relations;
+tabuList = cell(0,1);
+noTransferHistory = cell(max(1,options.MaxIterations),1);
+relationHistory = cell(max(1,options.MaxIterations),1);
+history = zeros(options.MaxIterations+1,3); history(1,:) = [0 initialCost initialCost];
+selectedOperators = zeros(options.MaxIterations,2);
+destroyChoices = zeros(options.MaxIterations,options.Neighbors);
+repairChoices = zeros(options.MaxIterations,options.Neighbors);
+% Select the implemented random and greedy paired-insertion operators.
+destroyWeights = 0.1*ones(1,5); repairWeights = 0.1*ones(1,2);
+destroyScores = zeros(1,5); repairScores = zeros(1,2);
+destroyUses = zeros(1,5); repairUses = zeros(1,2);
+transferNodes = data.TS;
+if ~options.EnableTransfers, transferNodes = []; end
+if options.EnableTransfers && ~isempty(transferNodes)
+    endings = data.depotendtime;
+    if ~isnumeric(endings) || size(endings,2) ~= 2 || any(~isfinite(endings(:))) || ...
+            ~all(ismember(data.vhcdepot,endings(:,1))) || ...
+            numel(unique(endings(:,1))) ~= size(endings,1)
+        error('Shuttle:DepotWindows','Transfer search requires unique [depotID closingTime] rows.');
     end
 end
-% objecrtive_change_tabulength(mm,1)=bestcost;
-% end
-%画图
-% hand2=plot(1:maxiteration,best(:,1));
-% set(hand2,'color','r','linestyle','-','linewidth',0.5,'markersize',6)
-% xlabel('iteration');ylabel('cost');xlim([1 maxiteration]);
-% % legend('currentcost','bestcost');
-% legend('bestcost');
-% hold off
-% box off ;
-%% ==============作图==============
-% % figure(1)   %作最短路径图
-% % for j=1:vhcnum
-% %     Shortest_Route=bestsolution{j,1};
-% %     Shortest_Route=[Shortest_Route Shortest_Route(1)];
-% %     plot([allLocation(Shortest_Route,1)],[allLocation(Shortest_Route,2)],'o-');
-% %     hold on
-% % end
-% % grid on
-% % for i = 1:size(allLocation,1)
-% %     text(allLocation(i,1),allLocation(i,2),['   ' num2str(i)]);
-% % end
-% % xlabel('城市横坐标'); ylabel('城市纵坐标'); 
-bestsolution
-toc
-for i=1:vhcnum
-    if i==1
-        dlmwrite('test.csv',bestsolution{i,1},'delimiter',',');
-    else
-        dlmwrite('test.csv',bestsolution{i,1},'delimiter',',','-append');
+for iteration = 1:options.MaxIterations
+    candidates = cell(options.Neighbors,1); noTransfer = cell(options.Neighbors,1);
+    candidateRelations = cell(options.Neighbors,1);
+    candidateKeys = cell(options.Neighbors,1); reverseKeys = cell(options.Neighbors,1);
+    costs = inf(options.Neighbors,1);
+    chosen = zeros(options.Neighbors,2);
+    for j = 1:options.Neighbors
+        d = GeneratingOperatorsChoice(iteration,data.lambda,1,destroyWeights);
+        r = GeneratingOperatorsChoice(iteration,data.lambda,2,repairWeights);
+        chosen(j,:) = [d r];
+        destroyChoices(iteration,j) = d; repairChoices(iteration,j) = r;
+        destroyUses(d) = destroyUses(d)+1; repairUses(r) = repairUses(r)+1;
+        if options.Verbose
+            [relTs,relNo,move,sNo,sTs,unusedCost] = neighbor(current,noTransferHistory,relations,data,transferNodes,d,r,iteration,relationHistory);
+        else
+            evalc('[relTs,relNo,move,sNo,sTs,unusedCost] = neighbor(current,noTransferHistory,relations,data,transferNodes,d,r,iteration,relationHistory);');
+        end
+        noTransfer{j} = sNo;
+        vNo = ValidateSolution(sNo,data); cNo = inf;
+        if vNo.feasible, cNo = cost(sNo); end
+        cTs = inf;
+        if options.EnableTransfers && ~isempty(sTs)
+            vTs = ValidateSolution(sTs,data);
+            if vTs.routeConstraintsSatisfied, cTs = cost(sTs); end
+        end
+        if cTs < cNo
+            candidates{j} = sTs; candidateRelations{j} = relTs; costs(j) = cTs;
+        else
+            candidates{j} = sNo; candidateRelations{j} = relNo; costs(j) = cNo;
+        end
+        if isequal(candidates{j},current), costs(j) = inf; end
+        if isfinite(costs(j))
+            [candidateKeys{j},reverseKeys{j}] = AssignmentMoveKey(current,candidates{j},data.demand);
+        end
     end
+    tabuFlags = false(options.Neighbors,1);
+    for j = 1:options.Neighbors
+        if ~isempty(tabuList) && ~isempty(candidateKeys{j})
+            tabuFlags(j) = any(strcmp(tabuList,candidateKeys{j}));
+        end
+    end
+    selected = SelectALNSNeighbor(costs,tabuFlags,bestCost);
+    if selected > 0
+        previousCost = currentCost;
+        current = candidates{selected}; currentCost = costs(selected);
+        relations = candidateRelations{selected};
+        noTransferHistory{iteration} = noTransfer{selected};
+        selectedOperators(iteration,:) = chosen(selected,:); reward = 0;
+        if currentCost < bestCost
+            best = current; bestCost = currentCost; bestRelations = relations;
+            reward = data.alpha1;
+        elseif currentCost < previousCost
+            reward = data.alpha2;
+        elseif currentCost > previousCost
+            reward = data.alpha3;
+        end
+        d = chosen(selected,1); r = chosen(selected,2);
+        destroyScores(d) = destroyScores(d)+reward;
+        repairScores(r) = repairScores(r)+reward;
+        if ~isempty(reverseKeys{selected})
+            tabuList{end+1,1} = reverseKeys{selected}; %#ok<AGROW>
+        end
+    else
+        if ~isempty(tabuList), tabuList(1,:) = []; end
+        if iteration > 1, noTransferHistory{iteration} = noTransferHistory{iteration-1};
+        else, noTransferHistory{iteration} = initial; end
+    end
+    if size(tabuList,1) > data.tabulength, tabuList = tabuList(end-data.tabulength+1:end,:); end
+    relationHistory{iteration} = relations;
+    history(iteration+1,:) = [iteration currentCost bestCost];
+    if mod(iteration,data.lambda) == 0
+        destroyWeights = updateWeights(destroyWeights,destroyScores,destroyUses,data.r);
+        repairWeights = updateWeights(repairWeights,repairScores,repairUses,data.r);
+        destroyScores(:) = 0; repairScores(:) = 0;
+        destroyUses(:) = 0; repairUses(:) = 0;
+    end
+    if options.Verbose, fprintf('Iteration %d: current %.8f, best %.8f\n',iteration,currentCost,bestCost); end
+end
+[unused,objective] = cost(best); %#ok<ASGLU>
+runtimeName = 'MATLAB';
+if exist('OCTAVE_VERSION','builtin'), runtimeName = 'GNU Octave'; end
+result = struct('initialCost',initialCost,'bestCost',bestCost, ...
+    'initialObjective',initialObjective, ...
+    'bestSolution',{best},'currentSolution',{current},'history',history, ...
+    'objective',objective,'selectedOperators',selectedOperators, ...
+    'destroyChoices',destroyChoices,'repairChoices',repairChoices, ...
+    'destroyWeights',destroyWeights,'repairWeights',repairWeights, ...
+    'transferRelationships',bestRelations,'tabuMemory',{tabuList},'options',options, ...
+    'initialValidation',initialValidation,'validation',ValidateSolution(best,data), ...
+    'elapsedSeconds',toc(started),'runtime',version,'runtimeName',runtimeName, ...
+    'unservedRequests',data.unservedRequests);
+if options.EnableTransfers, result.mode = 'Experimental transfer search; independent route costs';
+else, result.mode = 'No-transfer search on the initial served request set'; end
+if ~isempty(options.OutputDir)
+    if exist(options.OutputDir,'dir') ~= 7, mkdir(options.OutputDir); end
+    save(fullfile(options.OutputDir,'result.mat'),'result','-v7');
+    dlmwrite(fullfile(options.OutputDir,'history.csv'),history,'precision','%.15g');
+    fid = fopen(fullfile(options.OutputDir,'routes.csv'),'w');
+    if fid < 0, error('Shuttle:Output','Cannot open routes.csv.'); end
+    cleanupFile = onCleanup(@() fclose(fid)); %#ok<NASGU>
+    fprintf(fid,'vehicle,position,node\n');
+    for v = 1:numel(best)
+        for p = 1:numel(best{v}), fprintf(fid,'%d,%d,%d\n',v,p,best{v}(p)); end
+    end
+end
+end
+
+function weights = updateWeights(weights,scores,uses,reaction)
+weights = (1-reaction)*weights;
+used = uses > 0;
+weights(used) = weights(used)+reaction*scores(used)./uses(used);
+if ~any(weights > 0), weights(:) = 0.1; end
+end
+
+function [relTs,relNo,move,sNo,sTs,cTs] = neighbor(current,noHistory,relations,d,ts,des,rep,iteration,relHistory)
+[relTs,relNo,move,sNo,sTs,cTs] = DestroyandRepair_swap_2opt_func0803_edit_rep_1( ...
+    current,noHistory,relations,d.demand,d.vhcstarttime,d.vhcendtime, ...
+    d.demandstarttime,d.demandendtime,d.timematrix,d.vhcdemandtimematrix,ts, ...
+    d.depotendtime,d.vhccapacity,d.fixedcost,d.cwk,d.ctk,d.vhcdepot,des,rep, ...
+    d.TravelTimeMax,d.op,d.tsop,d.SetTsMax,d.EachOptionMax,iteration,relHistory);
 end

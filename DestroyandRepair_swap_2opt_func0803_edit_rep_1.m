@@ -1,33 +1,44 @@
 function [TsRelationNewWithTS,TsRelationshipNoTs,tablesolutionneig, NoTsSolutioncell, BestAllSolutionTs,BestAllOverCostTs] = DestroyandRepair_swap_2opt_func0803_edit_rep_1(currentsolutioncell,CurrentNoTsSolutionCell,TsRelationship,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,des_option,rep_option,TravelTimeMax,op,tsop,SetTsMax,EachOptionMax,iteration,His_TsRelationship)
-%%%function [TsRelationNewWithTS,TsRelationshipNoTs,tablesolutionneig, NoTsSolutioncell, BestAllSolutionTs,BestAllOverCostTs] = performswapTS_zh_Im(currentsolutioncell,CurrentNoTsSolution,TsRelationship,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,des_option,rep_option)
-%%%%%输出的nsolutioncell和BestAllSolutionTs均带下车点和TS点
 M = size(currentsolutioncell,1);
+% Bound unsuccessful sampling; an unchanged candidate has a zero descriptor.
+activeVehicles = find(~cellfun('isempty',currentsolutioncell));
+if numel(activeVehicles) < 2
+    TsRelationNewWithTS = TsRelationship;
+    TsRelationshipNoTs = TsRelationship;
+    tablesolutionneig = zeros(1,7);
+    NoTsSolutioncell = currentsolutioncell;
+    BestAllSolutionTs = currentsolutioncell;
+    BestAllOverCostTs = calculatetotalcost_test(currentsolutioncell,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk,op,tsop);
+    return
+end
+pairAttempts = 0;
+maxPairAttempts = 100;
 demandtime=[demandstarttime;demandendtime];
 YN = 0;
 r=0.1;
-% % TsRelationship=[
-% %     iteration,jthneighbor,a];
-%%%%%在加入需要的约束之前的权宜之计
-if rep_option==3
-    rep_option=2;
+if ~ismember(rep_option,[1,2])
+    error('MDVRPTW:RepairOperator','Only repair operators 1 and 2 are implemented.');
 end
 while YN == 0
     f=0;
     YNback=0;
     while YNback==0
-        a = randi(M);
-        b = randi(M);
-        NoTsSolutioncell=currentsolutioncell;
-        solutionOria = currentsolutioncell{a,1};%%%%%%车辆链A
-        solutionOrib = currentsolutioncell{b,1};%%%%%%车辆链B
-        rt = (isempty(solutionOria))||(isempty(solutionOrib));
-        while (a == b)||(rt == 1)       %保证非空且不等
-            a = randi(M);
-            b = randi(M);
-            solutionOria = currentsolutioncell{a,1};
-            solutionOrib = currentsolutioncell{b,1};
-            rt = (isempty(solutionOria))||(isempty(solutionOrib));
+        pairAttempts = pairAttempts + 1;
+        if pairAttempts > maxPairAttempts
+            TsRelationNewWithTS = TsRelationship;
+            TsRelationshipNoTs = TsRelationship;
+            tablesolutionneig = zeros(1,7);
+            NoTsSolutioncell = currentsolutioncell;
+            BestAllSolutionTs = currentsolutioncell;
+            BestAllOverCostTs = calculatetotalcost_test(currentsolutioncell,demand,vhccapacity,demandstarttime,demandendtime,vhcstarttime,timematrix,vhcdemandtimematrix,fixedcost,cwk,ctk,op,tsop);
+            return
         end
+        selected = activeVehicles(randperm(numel(activeVehicles),2));
+        a = selected(1);
+        b = selected(2);
+        NoTsSolutioncell=currentsolutioncell;
+        solutionOria = currentsolutioncell{a,1};
+        solutionOrib = currentsolutioncell{b,1};
         display([ num2str(a) ' and ' num2str(b) ' are chosen' ])
         TsRelationshipNoTs=TsRelationship;
         solutionNoTsa=solutionOria;
@@ -36,7 +47,7 @@ while YN == 0
         YNaa=1;
         YNb=1;
         YNbb=1;
-        if TsRelationship(a,1)~=0%%%两列车辆数行
+        if TsRelationship(a,1)~=0
             PointTsWithA=TsRelationship(a,1);
             display([ num2str(a) ' and ' num2str(PointTsWithA) ' are related' ]);
             solutionaReinsert=solutionOria;
@@ -54,7 +65,7 @@ while YN == 0
             TsRelationshipNoTs(a,2)=0;
             TsRelationshipNoTs(PointTsWithA,2)=0;
         end
-        if TsRelationship(b,1)~=0%%%两列车辆数行
+        if TsRelationship(b,1)~=0
             PointTsWithB=TsRelationship(b,1);
             display([ num2str(b) ' and ' num2str(PointTsWithB) ' are related' ]);
             solutionbReinsert=solutionOrib;
@@ -72,15 +83,14 @@ while YN == 0
             TsRelationshipNoTs(b,2)=0;
             TsRelationshipNoTs(PointTsWithB,2)=0;
         end
-        
-        if YNa&&YNaa&&YNb&&YNbb
-            TsRelationship
+
+        if YNa&&YNaa&&YNb&&YNbb&&~isempty(solutionNoTsa)&&~isempty(solutionNoTsb)
             YNback=1;
         end
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    SZA = size(solutionNoTsa,2);%%%车辆链A中有几个点？
-    SZB = size(solutionNoTsb,2);%%%车辆链B中有几个点？
+    SZA = size(solutionNoTsa,2);
+    SZB = size(solutionNoTsb,2);
     YN=0;
     TooMuchOrNot=0;
     CountNum=0;
@@ -94,17 +104,16 @@ while YN == 0
         if des_option==1
             [ DeteleNumA,DeteleNumB,DemandEList,DemandFList ] = DestroyOperator1( r,a,b,solutionNoTsa,solutionNoTsb,demand,NoTsSolutioncell,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot );
         elseif des_option==2
-            [ DeteleNumA,DeteleNumB,DemandEList,DemandFList ] = DestroyOperator2( r,a,b,solutionNoTsa,solutionNoTsb,demand,NoTsSolutioncell,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot );
+            [ DeteleNumA,DeteleNumB,DemandEList,DemandFList ] = DestroyOperator2( r,a,b,solutionNoTsa,solutionNoTsb,demand,NoTsSolutioncell,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,op,tsop );
         elseif des_option==3
             [ DeteleNumA,DeteleNumB,DemandEList,DemandFList ] = DestroyOperator3( r,a,b,solutionNoTsa,solutionNoTsb,demand,NoTsSolutioncell,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot );
         elseif des_option==4
             [ DeteleNumA,DemandEList ] = DestroyOperator4( r,a,solutionNoTsa,demand,NoTsSolutioncell );
             [ DeteleNumB,DemandFList ] = DestroyOperator4( r,b,solutionNoTsb,demand,NoTsSolutioncell );
         elseif des_option==5
-            [ DeteleNumA,DemandEList ] = DestroyOperator5( a,solutionNoTsa,NoTsSolutioncell,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot );
-            [ DeteleNumB,DemandFList ] = DestroyOperator5( b,solutionNoTsb,NoTsSolutioncell,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot );
+            [ DeteleNumA,DemandEList ] = DestroyOperator5( a,solutionNoTsa,NoTsSolutioncell,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,op,tsop );
+            [ DeteleNumB,DemandFList ] = DestroyOperator5( b,solutionNoTsb,NoTsSolutioncell,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,vhcdepot,op,tsop );
         end
-        display('I am at 107!!!!!!!!!!!!!!!!!!!!!!!!!');
         AwithoutEE=solutionNoTsa;
         BwithoutFF=solutionNoTsb;
         for j=1:DeteleNumA
@@ -160,8 +169,12 @@ while YN == 0
         end
     end
 end
-display('I am at 162!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-%%%%%%%%%%%%%%%%%%%%%%%%TS部分
+if isempty(TS)
+    TsRelationNewWithTS = TsRelationshipNoTs;
+    BestAllSolutionTs = NoTsSolutioncell;
+    BestAllOverCostTs = inf;
+    return
+end
 display(['Transfering, Chain' num2str(a) ' and Chain' num2str(b) ' are being proceeded']);
 [SetTs] = TransitOrNotAndWhere0421(AwithFF,BwithEE,vhcdepot,a,b,demand,vhcstarttime,vhcendtime,demandstarttime,demandendtime,timematrix,vhcdemandtimematrix,TS,depotendtime,vhccapacity,fixedcost,cwk,ctk,op,tsop);
 if isempty(SetTs)
@@ -171,7 +184,7 @@ end
 TsRelationNewWithTS=TsRelationshipNoTs;
 if isempty(BestAlloverSolutionTs)
     BestAlloverSolutionTs=NoTsSolutioncell;
-    BestAllOverCostTs=999999999999;
+    BestAllOverCostTs=inf;
 end
 BestAllSolutionTs=BestAlloverSolutionTs;
 TsRelationNewWithTS(a,1)=b;

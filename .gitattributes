@@ -1,0 +1,7 @@
+/*.m text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.json text eol=lf
+*.cff text eol=lf
+*.mat binary
+legacy/** -text
